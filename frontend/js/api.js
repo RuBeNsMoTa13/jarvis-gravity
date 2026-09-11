@@ -15,6 +15,19 @@ export const JarvisAPI = {
       return await res.json();
     } catch (e) {
       console.error("Erro ao buscar modelos:", e);
+      return { success: false, local_models: [], api_models: [] };
+    }
+  },
+
+  /**
+   * Consulta os modelos do Google Gemini disponíveis na API.
+   */
+  async getGoogleModels(sessionKey = null) {
+    try {
+      const url = sessionKey ? `${API_BASE}/api/models/google?session_key=${encodeURIComponent(sessionKey)}` : `${API_BASE}/api/models/google`;
+      const res = await fetch(url);
+      return await res.json();
+    } catch (e) {
       return { success: false, models: [] };
     }
   },
@@ -111,6 +124,52 @@ export const JarvisAPI = {
   },
 
   /**
+   * Cadastra metadados de um novo modelo de API (sem chave).
+   */
+  async addApiModel(modelData) {
+    try {
+      const res = await fetch(`${API_BASE}/api/models/api`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(modelData)
+      });
+      return await res.json();
+    } catch (e) {
+      return { success: false, error: e.message };
+    }
+  },
+
+  /**
+   * Remove um modelo de API cadastrado.
+   */
+  async deleteApiModel(modelId) {
+    try {
+      const res = await fetch(`${API_BASE}/api/models/api/${encodeURIComponent(modelId)}`, {
+        method: 'DELETE'
+      });
+      return await res.json();
+    } catch (e) {
+      return { success: false, error: e.message };
+    }
+  },
+
+  /**
+   * Testa uma chave de API para validação de conectividade.
+   */
+  async testApiModel({ provider, model_id, api_key, base_url }) {
+    try {
+      const res = await fetch(`${API_BASE}/api/models/api/test`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ provider, model_id, api_key, base_url })
+      });
+      return await res.json();
+    } catch (e) {
+      return { success: false, error: e.message };
+    }
+  },
+
+  /**
    * Envia uma mensagem e consome a resposta com streaming SSE em tempo real.
    */
   async chatStream({
@@ -118,6 +177,7 @@ export const JarvisAPI = {
     model,
     temperature = 0.7,
     autonomous = false,
+    session_key = null,
     onToken,
     onToolStart,
     onToolEnd,
@@ -126,14 +186,20 @@ export const JarvisAPI = {
     onError
   }) {
     try {
+      const headers = { 'Content-Type': 'application/json' };
+      if (session_key) {
+        headers['X-Api-Key'] = session_key;
+      }
+
       const response = await fetch(`${API_BASE}/api/chat/stream`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: headers,
         body: JSON.stringify({
           messages,
           model,
           temperature,
-          autonomous
+          autonomous,
+          session_key
         })
       });
 
@@ -182,6 +248,26 @@ export const JarvisAPI = {
       }
     } catch (e) {
       if (onError) onError(e.message);
+    }
+  },
+
+  /**
+   * Transcreve áudio gravado diretamente no backend via SpeechRecognition.
+   */
+  async transcribeAudio(audioBlob) {
+    try {
+      const formData = new FormData();
+      formData.append('audio', audioBlob, 'speech.wav');
+
+      const response = await fetch(`${API_BASE}/api/audio/transcribe`, {
+        method: 'POST',
+        body: formData
+      });
+
+      return await response.json();
+    } catch (e) {
+      console.error("Erro na requisição de transcrição:", e);
+      return { success: false, error: e.message };
     }
   }
 };

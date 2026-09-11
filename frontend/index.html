@@ -39,14 +39,22 @@
 
       <div class="header-center">
         <div class="model-selector-container">
-          <label for="model-select" class="hud-label">LLM LOCAL:</label>
+          <label for="model-select" class="hud-label">MODELO / LLM:</label>
           <div class="custom-select-wrap">
-            <select id="model-select" class="hud-select" title="Selecione o modelo Ollama local">
+            <select id="model-select" class="hud-select" title="Selecione o modelo ativo">
               <option value="">Carregando modelos...</option>
             </select>
             <span class="select-arrow">▼</span>
           </div>
+          <button id="toggle-manual-model-btn" class="hud-icon-btn" title="Digitar nome de qualquer modelo manualmente">✏️</button>
           <button id="refresh-models-btn" class="hud-icon-btn" title="Recarregar lista de modelos">↻</button>
+        </div>
+
+        <!-- BARRA FLUTUANTE PARA DIGITAR QUALQUER MODELO MANUALMENTE -->
+        <div id="manual-model-bar" class="manual-model-bar hidden">
+          <input type="text" id="manual-model-input" class="hud-input-manual" placeholder="Digite o modelo (ex: gemini-3.6-flash, gpt-4o)...">
+          <button id="apply-manual-model-btn" class="hud-btn-apply-model" title="Aplicar modelo">APLICAR</button>
+          <button id="cancel-manual-model-btn" class="hud-btn-cancel-model" title="Fechar">✕</button>
         </div>
       </div>
 
@@ -173,9 +181,9 @@
 
         <!-- VOICE & AUDIO INTERACTION CONTROLS -->
         <div class="voice-controls-bar">
-          <button id="mic-toggle-btn" class="voice-btn mic-btn" title="Falar com o JARVIS (ou segure a Barra de Espaço)">
+          <button id="mic-toggle-btn" class="voice-btn mic-btn" title="Falar com o JARVIS (Tecla NumLock)">
             <span class="mic-icon">🎙️</span>
-            <span class="mic-label" id="mic-btn-label">FALAR COM JARVIS</span>
+            <span class="mic-label" id="mic-btn-label">FALAR COM JARVIS [NUMLOCK]</span>
           </button>
 
           <button id="tts-toggle-btn" class="hud-control-toggle active" title="Alternar resposta por voz (Text-To-Speech)">
@@ -245,7 +253,7 @@
               <span class="checkbox-custom"></span>
               <span class="toggle-text">MODO AUTÔNOMO</span>
             </label>
-            <span class="composer-hint">Pressione [Enter] para enviar ou segure [Espaço] para falar</span>
+            <span class="composer-hint">💡 [NumLock] Falar por voz &bull; [Enter] Enviar</span>
           </div>
 
           <div class="composer-input-row">
@@ -253,10 +261,14 @@
               id="chat-input" 
               class="hud-textarea" 
               rows="1" 
-              placeholder="Digite sua ordem ou fale com o JARVIS..."
+              placeholder="Digite sua ordem ou aperte [NumLock] para falar..."
               autocomplete="off"
             ></textarea>
             
+            <button id="composer-mic-btn" class="hud-composer-mic-btn" title="Ativar microfone (Tecla NumLock)">
+              <span class="mic-glyph">🎙️</span>
+            </button>
+
             <button id="send-btn" class="hud-send-btn" title="Enviar mensagem">
               <span>ENVIAR</span>
               <span class="send-arrow">➔</span>
@@ -319,6 +331,113 @@
           </div>
         </div>
 
+        <!-- SECTION: MODELOS EM NUVEM VIA API (SEGURANÇA TOTAL DE CHAVES) -->
+        <div class="settings-section">
+          <div class="section-title-wrap">
+            <h4>MODELOS EM NUVEM (VIA API)</h4>
+            <span class="security-badge" title="Chaves nunca são gravadas em arquivos JSON do projeto">🛡️ ZERO-PERSISTÊNCIA GIT</span>
+          </div>
+          <p class="settings-desc">
+            Use modelos em nuvem (Google Gemini, OpenAI, Groq, OpenRouter, etc.). 
+            As chaves são lidas do seu <code>.env</code> local ou mantidas <strong>apenas na memória volátil do navegador nesta sessão</strong>.
+          </p>
+
+          <!-- LISTA DE MODELOS API CADASTRADOS -->
+          <div class="api-models-catalog" id="api-models-catalog">
+            <!-- Renderizado dinamicamente via app.js -->
+            <div class="catalog-loading">Carregando catálogo de modelos...</div>
+          </div>
+
+          <!-- SEÇÃO: MODELOS GOOGLE GEMINI COM SINCRONIZAÇÃO DA API -->
+          <div class="google-models-toolkit">
+            <div class="toolkit-head">
+              <span class="hud-label">MODELOS GOOGLE GEMINI (CLIQUE PARA USAR):</span>
+              <button id="sync-google-models-btn" class="hud-btn-subtle" title="Consultar todos os modelos ativos na sua chave Google">🔄 Sincronizar da API Google</button>
+            </div>
+            <div class="quick-gemini-chips" id="quick-gemini-chips">
+              <button class="gemini-chip" data-model="gemini-3.6-flash" title="Google Gemini 3.6 Flash (Recomendado)">gemini-3.6-flash ★</button>
+              <button class="gemini-chip" data-model="gemini-3.8-flash" title="Google Gemini 3.8 Flash (Raciocínio Rápido)">gemini-3.8-flash</button>
+              <button class="gemini-chip" data-model="gemini-3.6-pro" title="Google Gemini 3.6 Pro (Máxima Capacidade)">gemini-3.6-pro</button>
+              <button class="gemini-chip" data-model="gemini-3.7-flash" title="Google Gemini 3.7 Flash">gemini-3.7-flash</button>
+              <button class="gemini-chip" data-model="gemini-flash-latest" title="Google Gemini Flash Mais Recente">gemini-flash-latest</button>
+            </div>
+            <div id="google-synced-feedback" class="google-synced-msg hidden"></div>
+          </div>
+
+          <!-- GERENCIADOR DE CHAVE VOLÁTIL DE SESSÃO -->
+          <div class="session-key-manager">
+            <span class="hud-label">CHAVE DE API PARA ESTA SESSÃO (OPCIONAL):</span>
+            <div class="session-key-row">
+              <select id="session-key-provider" class="hud-select-small">
+                <option value="google">Google (Gemini)</option>
+                <option value="openai">OpenAI</option>
+                <option value="groq">Groq Cloud</option>
+                <option value="openrouter">OpenRouter</option>
+                <option value="deepseek">DeepSeek</option>
+                <option value="custom">Custom</option>
+              </select>
+              <div class="key-input-wrapper">
+                <input type="password" id="session-api-key-input" class="hud-input" placeholder="Cole sua chave aqui...">
+                <button id="toggle-key-visibility-btn" class="key-vis-btn" title="Mostrar/Ocultar">👁️</button>
+              </div>
+            </div>
+            <div class="session-key-actions">
+              <button id="test-api-key-btn" class="hud-btn-subtle">⚡ Testar Conexão</button>
+              <button id="save-session-key-btn" class="hud-action-btn-small">💾 Ativar na Sessão</button>
+              <button id="clear-session-key-btn" class="hud-btn-subtle text-red">✕ Limpar</button>
+            </div>
+            <div id="key-test-feedback" class="key-feedback-msg hidden"></div>
+          </div>
+
+          <!-- FORMULÁRIO DE CADASTRO DE NOVO MODELO (METADADOS) -->
+          <div class="add-model-toggle-row">
+            <button id="toggle-add-model-btn" class="hud-btn-subtle">+ Cadastrar Outro Modelo de API</button>
+          </div>
+
+          <div id="add-api-model-container" class="add-api-model-form hidden">
+            <span class="hud-label">CADASTRAR NOVO MODELO:</span>
+            
+            <!-- CHIPS DE SUGESTÃO RÁPIDA -->
+            <div class="suggestion-chips">
+              <button class="chip-btn" data-provider="google" data-model="gemini-3.6-flash" data-name="Gemini 3.6 Flash">Gemini 3.6 Flash</button>
+              <button class="chip-btn" data-provider="openai" data-model="gpt-4o" data-name="GPT-4o">GPT-4o</button>
+              <button class="chip-btn" data-provider="groq" data-model="deepseek-r1-distill-llama-70b" data-name="Groq DeepSeek R1">Groq R1 Distill</button>
+              <button class="chip-btn" data-provider="openrouter" data-model="anthropic/claude-3.5-sonnet" data-name="Claude 3.5 Sonnet">Claude 3.5 (OR)</button>
+            </div>
+
+            <div class="form-row-grid">
+              <div class="form-group">
+                <label class="hud-label-tiny">PROVEDOR:</label>
+                <select id="new-model-provider" class="hud-select-small">
+                  <option value="google">Google Gemini</option>
+                  <option value="openai">OpenAI</option>
+                  <option value="groq">Groq Cloud</option>
+                  <option value="openrouter">OpenRouter</option>
+                  <option value="deepseek">DeepSeek</option>
+                  <option value="custom">Custom (OpenAI Comp.)</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="hud-label-tiny">NOME DE EXIBIÇÃO:</label>
+                <input type="text" id="new-model-name" class="hud-input" placeholder="Ex: Gemini 3.6 Pro">
+              </div>
+            </div>
+
+            <div class="form-row-grid mt-1">
+              <div class="form-group">
+                <label class="hud-label-tiny">MODEL ID (API):</label>
+                <input type="text" id="new-model-id" class="hud-input" placeholder="Ex: gemini-3.6-pro">
+              </div>
+              <div class="form-group">
+                <label class="hud-label-tiny">BASE URL (OPCIONAL):</label>
+                <input type="text" id="new-model-base-url" class="hud-input" placeholder="https://...">
+              </div>
+            </div>
+
+            <button id="submit-new-model-btn" class="hud-action-btn mt-2" style="width: 100%;">Salvar Modelo no Catálogo</button>
+          </div>
+        </div>
+
         <!-- SECTION: TEMPERATURA & CRIATIVIDADE -->
         <div class="settings-section">
           <h4>TEMPERATURA DA REDE NEURAL</h4>
@@ -346,7 +465,10 @@
             <input type="range" id="voice-pitch" min="0.6" max="1.4" step="0.05" value="0.95" class="hud-slider">
             <span id="voice-pitch-val" class="slider-val">0.95</span>
           </div>
-          <button id="test-voice-btn" class="hud-btn-subtle mt-2">▶ Testar Voz</button>
+          <div style="display: flex; gap: 8px; margin-top: 8px;">
+            <button id="test-voice-btn" class="hud-btn-subtle">▶ Testar Voz</button>
+            <button id="test-mic-hardware-btn" class="hud-btn-subtle">🎙️ Testar Entrada de Microfone</button>
+          </div>
         </div>
 
       </div>

@@ -10,10 +10,15 @@ Assistente de inteligência artificial em tempo real estilo **JARVIS**, operando
    - Integração com a biblioteca oficial Python `ollama`.
    - Streaming em tempo real token-por-token via Server-Sent Events (SSE).
    - Suporte a qualquer modelo instalado (`gemma4:latest`, `gemma:latest`, `llama3.2`, `mistral`, `deepseek-r1`, `qwen2.5`, etc.).
-   - Alternância imediata de modelos no dropdown do topo da interface.
    - Baixe novos modelos diretamente pelo painel do HUD com barra de progresso em tempo real (`Ollama Pull`).
 
-2. **Interface Holográfica Stark HUD**:
+2. **Modelos em Nuvem via API (Google Gemini, OpenAI, Groq, OpenRouter, DeepSeek)**:
+   - 🛡️ **Segurança Total (Zero-Persistência em Git)**: Nenhuma chave de API é gravada em arquivos JSON do projeto.
+   - **Variáveis de Ambiente / .env**: Configure suas chaves no arquivo `.env` (já incluído no `.gitignore`) ou nas variáveis do sistema operacional (`GEMINI_API_KEY`, `OPENAI_API_KEY`, `GROQ_API_KEY`, `DEEPSEEK_API_KEY`, etc.).
+   - **Chave em Sessão de Navegador**: Se preferir, insira sua chave diretamente pela interface; ela fica salva **apenas na memória da aba aberta (`sessionStorage`)** e é transmitida de forma volátil durante as mensagens.
+   - **Alternância Unificada no Topo**: O seletor de modelos do cabeçalho agrupa automaticamente `🏠 Modelos Locais (Ollama)` e `☁️ Modelos em Nuvem (API)`.
+
+3. **Interface Holográfica Stark HUD**:
    - **Reator Arc Reativo (Canvas)**: Animações fluídas a 60fps que reagem dinamicamente aos estados do assistente (*Em Espera*, *Ouvindo*, *Processando*, *Falando*).
    - **Design Futurista**: Glassmorphism, iluminação neon azul-ciano e âmbar, scanlines táticas e tipografia sci-fi Orbitron.
    - **Telemetria de Sistema**: Monitoramento em tempo real de CPU, Memória RAM, Armazenamento e status do servidor local Ollama.

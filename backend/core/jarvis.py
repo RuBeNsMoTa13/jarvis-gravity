@@ -3,6 +3,7 @@ import logging
 import re
 from typing import AsyncGenerator, Dict, Any, List, Optional
 from .ollama_client import ollama_manager
+from .api_client import api_model_manager
 from ..tools.search_tool import search_web, format_search_context
 from ..tools.markdown_tool import save_research_markdown, list_researches, read_research, open_research_file
 from ..tools.system_tool import execute_os_command, open_application, get_system_telemetry
@@ -91,7 +92,8 @@ class JarvisBrain:
         messages: List[Dict[str, str]],
         model: Optional[str] = None,
         temperature: float = 0.7,
-        autonomous: bool = False
+        autonomous: bool = False,
+        session_key: Optional[str] = None
     ) -> AsyncGenerator[Dict[str, Any], None]:
         """
         Processa a mensagem com detecção de ferramentas, execução e streaming em tempo real.
@@ -220,14 +222,37 @@ class JarvisBrain:
         yield {"type": "stream_start", "model": target_model}
 
         accumulated_response = ""
-        async for chunk in ollama_manager.chat_stream(
-            model=target_model,
-            messages=augmented_messages,
-            temperature=temperature,
-            system_prompt=self.system_prompt
-        ):
-            accumulated_response += chunk
-            yield {"type": "token", "content": chunk}
+        api_model_cfg = api_model_manager.get_model(target_model)
+
+        if api_model_cfg or target_model.startswith("api:"):
+            if not api_model_cfg:
+                parts = target_model.split(":", 2)
+                provider = parts[1] if len(parts) > 1 else "openai"
+                model_id = parts[2] if len(parts) > 2 else target_model
+                api_model_cfg = {
+                    "id": target_model,
+                    "name": target_model,
+                    "provider": provider,
+                    "model_id": model_id
+                }
+            async for chunk in api_model_manager.chat_stream(
+                model_cfg=api_model_cfg,
+                messages=augmented_messages,
+                session_key=session_key,
+                temperature=temperature,
+                system_prompt=self.system_prompt
+            ):
+                accumulated_response += chunk
+                yield {"type": "token", "content": chunk}
+        else:
+            async for chunk in ollama_manager.chat_stream(
+                model=target_model,
+                messages=augmented_messages,
+                temperature=temperature,
+                system_prompt=self.system_prompt
+            ):
+                accumulated_response += chunk
+                yield {"type": "token", "content": chunk}
 
         # 3. Se a intenção era criar um arquivo markdown, salvar o relatório gerado
         if tool_name == "create_markdown" and accumulated_response.strip():
