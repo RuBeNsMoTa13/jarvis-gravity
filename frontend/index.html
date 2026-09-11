@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="JARVIS - Assistente Inteligente em Tempo Real com Ollama Local, Pesquisa Web e Automação de SO">
+  <title>J.A.R.V.I.S. // Stark Industries Tactical OS</title>
+  
+  <!-- Google Fonts: Orbitron (Sci-Fi Headings) & Inter (Clean UI) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Orbitron:wght@500;700;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="stark-theme">
+  <!-- Scanlines & Background HUD Grids -->
+  <div class="hud-background-grid"></div>
+  <div class="hud-scanlines"></div>
+  <div class="hud-glow-orb glow-top-left"></div>
+  <div class="hud-glow-orb glow-bottom-right"></div>
+
+  <!-- MAIN HUD WRAPPER -->
+  <div class="hud-container">
+    
+    <!-- TOP STATUS BAR -->
+    <header class="hud-header">
+      <div class="header-left">
+        <div class="stark-logo">
+          <span class="logo-symbol">◈</span>
+          <span class="logo-title">J.A.R.V.I.S.</span>
+          <span class="logo-ver">MARK-VII // V4.2</span>
+        </div>
+        <div class="status-indicator-badge" id="system-status-badge">
+          <span class="pulse-dot"></span>
+          <span class="status-label" id="status-text">SISTEMAS PRONTOS</span>
+        </div>
+      </div>
+
+      <div class="header-center">
+        <div class="model-selector-container">
+          <label for="model-select" class="hud-label">LLM LOCAL:</label>
+          <div class="custom-select-wrap">
+            <select id="model-select" class="hud-select" title="Selecione o modelo Ollama local">
+              <option value="">Carregando modelos...</option>
+            </select>
+            <span class="select-arrow">▼</span>
+          </div>
+          <button id="refresh-models-btn" class="hud-icon-btn" title="Recarregar lista de modelos">↻</button>
+        </div>
+      </div>
+
+      <div class="header-right">
+        <button id="toggle-researches-btn" class="hud-btn-nav" title="Ver Dossiês e Relatórios Salvos">
+          <span class="btn-icon">📁</span>
+          <span>DOSSIÊS (<span id="research-count">0</span>)</span>
+        </button>
+        <button id="toggle-settings-btn" class="hud-btn-nav" title="Configurações e Baixar Novos Modelos">
+          <span class="btn-icon">⚙</span>
+          <span>SISTEMA</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- MAIN COCKPIT BODY -->
+    <main class="hud-cockpit">
+      
+      <!-- LEFT PANEL: TELEMETRY & HARDWARE -->
+      <aside class="hud-sidebar hud-telemetry-panel">
+        <div class="panel-header">
+          <span class="panel-tag">SYS.DIAG</span>
+          <h3>TELEMETRIA TÁTICA</h3>
+        </div>
+
+        <div class="telemetry-grid">
+          <!-- CPU GAUGE -->
+          <div class="telemetry-card">
+            <div class="card-head">
+              <span>CPU UTILIZATION</span>
+              <span id="cpu-val" class="metric-highlight">0%</span>
+            </div>
+            <div class="hud-progress-bar">
+              <div id="cpu-bar" class="hud-progress-fill" style="width: 0%"></div>
+            </div>
+          </div>
+
+          <!-- RAM GAUGE -->
+          <div class="telemetry-card">
+            <div class="card-head">
+              <span>RAM (MEMÓRIA)</span>
+              <span id="ram-val" class="metric-highlight">0 / 0 GB</span>
+            </div>
+            <div class="hud-progress-bar">
+              <div id="ram-bar" class="hud-progress-fill fill-amber" style="width: 0%"></div>
+            </div>
+          </div>
+
+          <!-- DISK GAUGE -->
+          <div class="telemetry-card">
+            <div class="card-head">
+              <span>ARMAZENAMENTO</span>
+              <span id="disk-val" class="metric-highlight">0 GB LIVRES</span>
+            </div>
+            <div class="hud-progress-bar">
+              <div id="disk-bar" class="hud-progress-fill fill-cyan" style="width: 0%"></div>
+            </div>
+          </div>
+
+          <!-- OLLAMA SERVICE STATUS -->
+          <div class="telemetry-card status-card">
+            <div class="card-head">
+              <span>MOTOR LOCAL (OLLAMA)</span>
+              <span id="ollama-status" class="badge-status online">CONECTADO</span>
+            </div>
+            <div class="engine-meta">
+              <span>PORTA: 11434 (LOCAL)</span>
+              <span id="engine-model-tag">Gemma / Local</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- QUICK SYSTEM COMMANDS -->
+        <div class="quick-commands-section">
+          <div class="panel-header">
+            <span class="panel-tag">MACRO</span>
+            <h4>COMANDOS RÁPIDOS</h4>
+          </div>
+          <div class="quick-btn-group">
+            <button class="quick-cmd-btn" data-prompt="Abra a calculadora">🧮 Abrir Calculadora</button>
+            <button class="quick-cmd-btn" data-prompt="Abra o bloco de notas">📝 Bloco de Notas</button>
+            <button class="quick-cmd-btn" data-prompt="Qual o status do sistema e uso de hardware?">📊 Diagnóstico Completo</button>
+            <button class="quick-cmd-btn" data-prompt="JARVIS, pesquise na web as novidades sobre tecnologia hoje e faça um resumo">🌐 Pesquisar Notícias</button>
+          </div>
+        </div>
+
+        <!-- TERMINAL HUD PREVIEW -->
+        <div class="terminal-preview-container">
+          <div class="terminal-header">
+            <span class="term-dot"></span>
+            <span>TERMINAL POWERSHELL</span>
+            <button id="clear-term-btn" class="term-action-btn">LIMPAR</button>
+          </div>
+          <div id="terminal-output" class="terminal-logs">
+            <div class="log-line sys">[SYSTEM] Protocolo JARVIS inicializado.</div>
+            <div class="log-line sys">[SYSTEM] Pronto para execução de comandos do SO.</div>
+          </div>
+        </div>
+      </aside>
+
+      <!-- CENTER STAGE: ARC REACTOR & VOICE CORE -->
+      <section class="hud-centerstage">
+        
+        <!-- ARC REACTOR CANVAS VISUALIZER -->
+        <div class="reactor-outer-wrapper">
+          <div class="reactor-ring-decoration"></div>
+          <div class="reactor-canvas-box">
+            <canvas id="arc-reactor-canvas" width="400" height="400"></canvas>
+            
+            <!-- CENTRAL CORE OVERLAY -->
+            <div class="reactor-core-info">
+              <span class="core-subtitle" id="core-state-subtitle">ONLINE</span>
+              <h2 class="core-title" id="core-state-title">JARVIS</h2>
+              <div class="audio-wave-visualizer" id="audio-waves">
+                <span class="wave-bar"></span>
+                <span class="wave-bar"></span>
+                <span class="wave-bar"></span>
+                <span class="wave-bar"></span>
+                <span class="wave-bar"></span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- VOICE & AUDIO INTERACTION CONTROLS -->
+        <div class="voice-controls-bar">
+          <button id="mic-toggle-btn" class="voice-btn mic-btn" title="Falar com o JARVIS (ou segure a Barra de Espaço)">
+            <span class="mic-icon">🎙️</span>
+            <span class="mic-label" id="mic-btn-label">FALAR COM JARVIS</span>
+          </button>
+
+          <button id="tts-toggle-btn" class="hud-control-toggle active" title="Alternar resposta por voz (Text-To-Speech)">
+            <span class="toggle-icon">🔊</span>
+            <span class="toggle-label">VOZ ATIVA</span>
+          </button>
+
+          <button id="sfx-toggle-btn" class="hud-control-toggle active" title="Alternar efeitos sonoros de interface">
+            <span class="toggle-icon">⚡</span>
+            <span class="toggle-label">SFX SCI-FI</span>
+          </button>
+        </div>
+
+        <!-- VOICE TRANSCRIPTION BANNER -->
+        <div class="speech-banner hidden" id="speech-banner">
+          <span class="speech-indicator">● OUVINDO:</span>
+          <span class="speech-text" id="speech-transcript">...</span>
+        </div>
+      </section>
+
+      <!-- RIGHT PANEL: CHAT STREAM & ACTION FEED -->
+      <section class="hud-chat-panel">
+        <div class="chat-header">
+          <div class="chat-header-title">
+            <span class="panel-tag">FEED TÁTICO</span>
+            <h3>COMUNICAÇÃO EM TEMPO REAL</h3>
+          </div>
+          <div class="chat-header-actions">
+            <button id="clear-chat-btn" class="hud-icon-btn" title="Limpar conversa">🗑️</button>
+          </div>
+        </div>
+
+        <!-- CHAT MESSAGES STREAM CONTAINER -->
+        <div class="chat-messages-container" id="chat-messages">
+          
+          <!-- WELCOME MESSAGE -->
+          <div class="chat-msg jarvis-msg">
+            <div class="msg-avatar">◈</div>
+            <div class="msg-body">
+              <div class="msg-meta">
+                <span class="msg-sender">JARVIS</span>
+                <span class="msg-time">AGORA</span>
+              </div>
+              <div class="msg-content">
+                Olá, senhor. Todos os subsistemas operacionais e a rede neural local via <strong>Ollama</strong> estão operando com 100% de capacidade. 
+                Estou pronto para realizar <strong>pesquisas na web</strong>, sintetizar <strong>dossiês em Markdown</strong> e <strong>executar comandos no Windows</strong> sob suas ordens. Como posso servi-lo hoje?
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- LIVE TOOL EXECUTION BADGE (DYNAMIC) -->
+        <div class="tool-banner hidden" id="tool-banner">
+          <div class="tool-spinner"></div>
+          <div class="tool-info">
+            <span class="tool-name" id="tool-banner-name">EXECUTANDO FERRAMENTA</span>
+            <span class="tool-detail" id="tool-banner-detail">Processando requisição...</span>
+          </div>
+        </div>
+
+        <!-- CHAT INPUT COMPOSER -->
+        <div class="chat-composer">
+          <div class="composer-toolbar">
+            <label class="auto-mode-toggle" title="Modo Autônomo: executa comandos do sistema diretamente sem pedir confirmação">
+              <input type="checkbox" id="autonomous-toggle">
+              <span class="checkbox-custom"></span>
+              <span class="toggle-text">MODO AUTÔNOMO</span>
+            </label>
+            <span class="composer-hint">Pressione [Enter] para enviar ou segure [Espaço] para falar</span>
+          </div>
+
+          <div class="composer-input-row">
+            <textarea 
+              id="chat-input" 
+              class="hud-textarea" 
+              rows="1" 
+              placeholder="Digite sua ordem ou fale com o JARVIS..."
+              autocomplete="off"
+            ></textarea>
+            
+            <button id="send-btn" class="hud-send-btn" title="Enviar mensagem">
+              <span>ENVIAR</span>
+              <span class="send-arrow">➔</span>
+            </button>
+          </div>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- DRAWER: DOSSIÊS / RESEARCHES -->
+    <div class="hud-drawer" id="researches-drawer">
+      <div class="drawer-header">
+        <div class="drawer-title">
+          <span class="panel-tag">ARQUIVOS</span>
+          <h3>DOSSIÊS & PESQUISAS MARKDOWN</h3>
+        </div>
+        <div class="drawer-actions">
+          <button id="open-research-folder-btn" class="hud-action-btn">📂 ABRIR PASTA NO WINDOWS</button>
+          <button class="close-drawer-btn" data-drawer="researches-drawer">✕</button>
+        </div>
+      </div>
+      
+      <div class="drawer-content">
+        <div class="researches-list" id="researches-list">
+          <div class="empty-dossier-state">Nenhum dossiê gerado ainda. Peça ao JARVIS: <em>"Crie um resumo em markdown sobre IA"</em></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DRAWER: SETTINGS & MODEL DOWNLOAD -->
+    <div class="hud-drawer" id="settings-drawer">
+      <div class="drawer-header">
+        <div class="drawer-title">
+          <span class="panel-tag">CONFIGURAÇÕES</span>
+          <h3>PARÂMETROS DO SISTEMA</h3>
+        </div>
+        <button class="close-drawer-btn" data-drawer="settings-drawer">✕</button>
+      </div>
+
+      <div class="drawer-content settings-layout">
+        
+        <!-- SECTION: BAIXAR NOVO MODELO OLLAMA -->
+        <div class="settings-section">
+          <h4>BAIXAR NOVO MODELO (OLLAMA PULL)</h4>
+          <p class="settings-desc">Adicione qualquer modelo da biblioteca oficial Ollama (ex: <code>llama3.2</code>, <code>mistral</code>, <code>qwen2.5</code>, <code>deepseek-r1:7b</code>, <code>phi3</code>).</p>
+          <div class="pull-row">
+            <input type="text" id="pull-model-input" class="hud-input" placeholder="Ex: llama3.2 ou mistral">
+            <button id="pull-model-btn" class="hud-action-btn">BAIXAR MODELO</button>
+          </div>
+          
+          <div id="pull-progress-box" class="pull-progress-container hidden">
+            <div class="pull-meta">
+              <span id="pull-status-text">Iniciando download...</span>
+              <span id="pull-percent-text">0%</span>
+            </div>
+            <div class="hud-progress-bar">
+              <div id="pull-bar-fill" class="hud-progress-fill" style="width: 0%"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SECTION: TEMPERATURA & CRIATIVIDADE -->
+        <div class="settings-section">
+          <h4>TEMPERATURA DA REDE NEURAL</h4>
+          <div class="slider-row">
+            <input type="range" id="temp-slider" min="0" max="1" step="0.05" value="0.7" class="hud-slider">
+            <span id="temp-val" class="slider-val">0.70</span>
+          </div>
+          <span class="settings-desc">Valores menores (0.1 - 0.3) são mais determinísticos e exatos; valores maiores (0.7 - 0.9) são mais criativos e analíticos.</span>
+        </div>
+
+        <!-- SECTION: VOZ DO JARVIS -->
+        <div class="settings-section">
+          <h4>CONFIGURAÇÕES DE VOZ (TTS)</h4>
+          <div class="form-group">
+            <label class="hud-label">VOZ SINTETIZADA:</label>
+            <select id="voice-select" class="hud-select"></select>
+          </div>
+          <div class="slider-row mt-2">
+            <label class="hud-label">VELOCIDADE:</label>
+            <input type="range" id="voice-rate" min="0.8" max="1.5" step="0.05" value="1.05" class="hud-slider">
+            <span id="voice-rate-val" class="slider-val">1.05x</span>
+          </div>
+          <div class="slider-row mt-2">
+            <label class="hud-label">TOM (PITCH):</label>
+            <input type="range" id="voice-pitch" min="0.6" max="1.4" step="0.05" value="0.95" class="hud-slider">
+            <span id="voice-pitch-val" class="slider-val">0.95</span>
+          </div>
+          <button id="test-voice-btn" class="hud-btn-subtle mt-2">▶ Testar Voz</button>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- MODAL DE LEITURA DE DOSSIÊ MARKDOWN -->
+    <div class="hud-modal-overlay hidden" id="dossier-modal">
+      <div class="hud-modal-window">
+        <div class="modal-header">
+          <div class="modal-title-box">
+            <span class="panel-tag">DOSSIÊ TÁTICO</span>
+            <h3 id="modal-dossier-title">Título do Dossiê</h3>
+          </div>
+          <div class="modal-actions">
+            <button id="modal-open-win-btn" class="hud-action-btn">ABRIR ARQUIVO</button>
+            <button id="close-modal-btn" class="close-drawer-btn">✕</button>
+          </div>
+        </div>
+        <div class="modal-body" id="modal-dossier-content">
+          <!-- Conteúdo Markdown formatado -->
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Marked.js para renderização rápida e de alta qualidade de Markdown no cliente -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+  <!-- Modulos JavaScript da aplicação -->
+  <script type="module" src="js/audio.js"></script>
+  <script type="module" src="js/reactor.js"></script>
+  <script type="module" src="js/api.js"></script>
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
