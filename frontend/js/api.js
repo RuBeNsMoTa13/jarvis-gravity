@@ -178,6 +178,7 @@ export const JarvisAPI = {
     temperature = 0.7,
     autonomous = false,
     session_key = null,
+    signal = null,
     onToken,
     onToolStart,
     onToolEnd,
@@ -194,6 +195,7 @@ export const JarvisAPI = {
       const response = await fetch(`${API_BASE}/api/chat/stream`, {
         method: 'POST',
         headers: headers,
+        signal: signal,
         body: JSON.stringify({
           messages,
           model,
@@ -211,7 +213,15 @@ export const JarvisAPI = {
       const decoder = new TextDecoder('utf-8');
       let buffer = '';
 
+      if (signal) {
+        signal.addEventListener('abort', () => {
+          try { reader.cancel(); } catch (e) {}
+        });
+      }
+
       while (true) {
+        if (signal && signal.aborted) break;
+
         const { done, value } = await reader.read();
         if (done) break;
 
@@ -247,6 +257,10 @@ export const JarvisAPI = {
         }
       }
     } catch (e) {
+      if (e.name === 'AbortError' || signal?.aborted) {
+        // Interrupção manual silenciosa solicitada pelo operador
+        return;
+      }
       if (onError) onError(e.message);
     }
   },

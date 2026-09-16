@@ -87,6 +87,12 @@ class JarvisApp {
     this.ttsToggleBtn = document.getElementById('tts-toggle-btn');
     this.sfxToggleBtn = document.getElementById('sfx-toggle-btn');
 
+    // Botões de Interrupção [-] e Escuta [+]
+    this.stopJarvisBtn = document.getElementById('stop-jarvis-btn');
+    this.listenJarvisBtn = document.getElementById('listen-jarvis-btn');
+    this.quickStopBtn = document.getElementById('quick-stop-btn');
+    this.currentAbortController = null;
+
     // Drawers & Modais
     this.toggleResearchesBtn = document.getElementById('toggle-researches-btn');
     this.toggleSettingsBtn = document.getElementById('toggle-settings-btn');
@@ -188,6 +194,41 @@ class JarvisApp {
     this.sfxToggleBtn.addEventListener('click', () => {
       this.audio.sfxEnabled = !this.audio.sfxEnabled;
       this.sfxToggleBtn.classList.toggle('active', this.audio.sfxEnabled);
+    });
+
+    // BOTÃO [-]: Interromper JARVIS imediatamente
+    if (this.stopJarvisBtn) {
+      this.stopJarvisBtn.addEventListener('click', () => this.interruptJarvis());
+    }
+    if (this.quickStopBtn) {
+      this.quickStopBtn.addEventListener('click', () => this.interruptJarvis());
+    }
+
+    // BOTÃO [+]: Parar JARVIS e começar a ouvir o operador
+    if (this.listenJarvisBtn) {
+      this.listenJarvisBtn.addEventListener('click', () => this.stopAndListen());
+    }
+
+    // ATALHOS GLOBAIS DE TECLADO: [-] INTERROMPER | [+] OUVIR
+    window.addEventListener('keydown', (e) => {
+      const activeTag = document.activeElement ? document.activeElement.tagName : '';
+      const isTyping = ['INPUT', 'TEXTAREA'].includes(activeTag);
+
+      // Tecla [-], NumpadSubtract ou Escape: Interrompe JARVIS
+      if ((e.key === '-' && !isTyping) || e.code === 'NumpadSubtract' || e.key === 'Escape') {
+        if (this.isGenerating || ('speechSynthesis' in window && window.speechSynthesis.speaking) || e.code === 'NumpadSubtract' || e.key === 'Escape') {
+          e.preventDefault();
+          this.interruptJarvis();
+          return;
+        }
+      }
+
+      // Tecla [+], NumpadAdd: Parar e Ouvir
+      if ((e.key === '+' && !isTyping) || e.code === 'NumpadAdd') {
+        e.preventDefault();
+        this.stopAndListen();
+        return;
+      }
     });
 
     // Comandos Rápidos
@@ -1006,12 +1047,16 @@ class JarvisApp {
       sessionKey = sessionStorage.getItem('jarvis_key_' + selectedApiModel.provider);
     }
 
+    // Criar controlador de aborto para permitir interrupção imediata via [-]
+    this.currentAbortController = new AbortController();
+
     await JarvisAPI.chatStream({
       messages: this.messages,
       model: this.currentModel,
       temperature: temperature,
       autonomous: autonomous,
       session_key: sessionKey,
+      signal: this.currentAbortController.signal,
 
       onToken: (token) => {
         fullResponse += token;
@@ -1042,6 +1087,7 @@ class JarvisApp {
 
       onDone: (finalContent) => {
         this.isGenerating = false;
+        this.currentAbortController = null;
         this.hideToolBanner();
         this.reactor.setState('IDLE');
         this.audio.playCompletionChime();
@@ -1055,12 +1101,70 @@ class JarvisApp {
 
       onError: (errMsg) => {
         this.isGenerating = false;
+        this.currentAbortController = null;
         this.hideToolBanner();
         this.reactor.setState('IDLE');
         assistantMsg.updateContent(`⚠️ **Erro de Comunicação Neural**: ${errMsg}`);
         this.logTerminal(`[ERRO]: ${errMsg}`, 'sys');
       }
     });
+  }
+
+  /**
+   * BOTÃO [-]: Interrompe completamente o JARVIS.
+   * Cancela geração em tempo real, fala vocal (TTS) e microfone imediatamente.
+   */
+  interruptJarvis() {
+    // 1. Cancelar requisição SSE ativa
+    if (this.currentAbortController) {
+      try {
+        this.currentAbortController.abort();
+      } catch (e) {}
+      this.currentAbortController = null;
+    }
+
+    // 2. Cancelar fala de áudio TTS
+    this.audio.stopSpeaking();
+
+    // 3. Cancelar microfone se estiver ouvindo
+    if (this.audio.isListening) {
+      this.audio.stopListening();
+      this.updateMicBtnState();
+    }
+
+    // 4. Restaurar estado de interface
+    this.isGenerating = false;
+    this.hideToolBanner();
+    this.reactor.setState('IDLE');
+
+    // 5. Feedback sonoro e no terminal
+    this.audio.playCancelSFX();
+    this.logTerminal('[COMANDO -]: JARVIS interrompido pelo operador.', 'sys');
+  }
+
+  /**
+   * BOTÃO [+]: Para o JARVIS imediatamente e abre o microfone para escutar o operador.
+   */
+  async stopAndListen() {
+    // 1. Interromper geração e fala
+    if (this.currentAbortController) {
+      try {
+        this.currentAbortController.abort();
+      } catch (e) {}
+      this.currentAbortController = null;
+    }
+    this.audio.stopSpeaking();
+    this.isGenerating = false;
+    this.hideToolBanner();
+
+    // 2. Iniciar escuta imediata do microfone
+    if (!this.audio.isListening) {
+      await this.audio.startListening();
+      this.updateMicBtnState();
+    }
+
+    this.audio.playToolBeep();
+    this.logTerminal('[COMANDO +]: JARVIS interrompido. Escuta ativada: fale agora...', 'cmd');
   }
 
   showToolBanner(name, detail) {

@@ -1049,6 +1049,7 @@ code,
 
 .hud-textarea {
   flex: 1;
+  min-width: 180px;
   background: transparent;
   border: none;
   outline: none;
@@ -1062,6 +1063,143 @@ code,
 }
 .hud-textarea::placeholder {
   color: var(--text-dim);
+}
+
+/* Ações rápidas [-] e [+] na barra de ferramentas */
+.composer-quick-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.hud-mini-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-family: var(--font-hud);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+.hud-mini-btn span {
+  font-size: 12px;
+  font-weight: 900;
+}
+.hud-mini-btn.btn-stop {
+  background: rgba(255, 42, 109, 0.15);
+  border: 1px solid rgba(255, 42, 109, 0.45);
+  color: #ff2a6d;
+}
+.hud-mini-btn.btn-stop:hover {
+  background: rgba(255, 42, 109, 0.35);
+  border-color: #ff2a6d;
+  color: #ffffff;
+  box-shadow: 0 0 10px rgba(255, 42, 109, 0.5);
+  transform: translateY(-1px);
+}
+.hud-mini-btn.btn-listen {
+  background: rgba(0, 243, 255, 0.12);
+  border: 1px solid rgba(0, 243, 255, 0.45);
+  color: var(--cyan-core);
+}
+.hud-mini-btn.btn-listen:hover {
+  background: rgba(0, 243, 255, 0.25);
+  border-color: var(--cyan-core);
+  color: #ffffff;
+  box-shadow: 0 0 10px var(--cyan-glow);
+  transform: translateY(-1px);
+}
+
+/* BOTÕES DE INTERRUPÇÃO [-] E ESCUTA [+] */
+.hud-control-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 7px 11px;
+  border-radius: 6px;
+  font-family: var(--font-hud);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  user-select: none;
+  white-space: nowrap;
+}
+.hud-control-btn .btn-glyph {
+  font-size: 14px;
+  font-weight: 900;
+  line-height: 1;
+}
+
+/* BOTÃO [-] PARAR / INTERROMPER (Vermelho/Crimson neon) */
+.hud-control-btn.btn-stop {
+  background: rgba(255, 42, 109, 0.12);
+  border: 1px solid rgba(255, 42, 109, 0.45);
+  color: #ff2a6d;
+  box-shadow: 0 0 8px rgba(255, 42, 109, 0.18);
+}
+.hud-control-btn.btn-stop:hover {
+  background: rgba(255, 42, 109, 0.3);
+  border-color: #ff2a6d;
+  color: #ffffff;
+  box-shadow: 0 0 14px rgba(255, 42, 109, 0.6);
+  transform: translateY(-1px);
+}
+.hud-control-btn.btn-stop:active {
+  transform: translateY(1px);
+}
+
+/* BOTÃO [+] PARAR & OUVIR (Ciano neon reator) */
+.hud-control-btn.btn-listen {
+  background: rgba(0, 243, 255, 0.12);
+  border: 1px solid rgba(0, 243, 255, 0.45);
+  color: var(--cyan-core);
+  box-shadow: 0 0 8px var(--cyan-glow);
+}
+.hud-control-btn.btn-listen:hover {
+  background: rgba(0, 243, 255, 0.3);
+  border-color: var(--cyan-core);
+  color: #ffffff;
+  box-shadow: 0 0 14px var(--cyan-glow);
+  transform: translateY(-1px);
+}
+.hud-control-btn.btn-listen:active {
+  transform: translateY(1px);
+}
+
+/* PILL NO PAINEL CENTRAL DO REATOR */
+.hud-action-pill.pill-stop {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 42, 109, 0.12);
+  border: 1px solid rgba(255, 42, 109, 0.45);
+  color: #ff2a6d;
+  font-family: var(--font-hud);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  padding: 8px 14px;
+  border-radius: var(--border-radius-md);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.hud-action-pill.pill-stop:hover {
+  background: rgba(255, 42, 109, 0.25);
+  border-color: #ff2a6d;
+  color: #fff;
+  box-shadow: 0 0 12px rgba(255, 42, 109, 0.5);
+  transform: translateY(-1px);
+}
+.hud-action-pill.pill-stop .pill-symbol {
+  font-size: 14px;
+  font-weight: 900;
 }
 
 .hud-send-btn {

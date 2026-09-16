@@ -192,9 +192,14 @@
 
         <!-- VOICE & AUDIO INTERACTION CONTROLS -->
         <div class="voice-controls-bar">
-          <button id="mic-toggle-btn" class="voice-btn mic-btn" title="Falar com o JARVIS (Tecla NumLock)">
+          <button id="quick-stop-btn" class="hud-action-pill pill-stop" title="Interromper JARVIS imediatamente (Atalho: - ou Esc)">
+            <span class="pill-symbol">−</span>
+            <span>PARAR [-]</span>
+          </button>
+
+          <button id="mic-toggle-btn" class="voice-btn mic-btn" title="Parar o JARVIS e começar a ouvir você (Atalho: +)">
             <span class="mic-icon">🎙️</span>
-            <span class="mic-label" id="mic-btn-label">FALAR COM JARVIS [NUMLOCK]</span>
+            <span class="mic-label" id="mic-btn-label">FALAR COM JARVIS [+]</span>
           </button>
 
           <button id="tts-toggle-btn" class="hud-control-toggle active" title="Alternar resposta por voz (Text-To-Speech)">
@@ -265,7 +270,18 @@
               <span class="checkbox-custom"></span>
               <span class="toggle-text">MODO AUTÔNOMO</span>
             </label>
-            <span class="composer-hint">💡 [NumLock] Falar por voz &bull; [Enter] Enviar</span>
+
+            <!-- AÇÕES RÁPIDAS DE CONTROLE [-] E [+] -->
+            <div class="composer-quick-actions">
+              <button id="stop-jarvis-btn" class="hud-mini-btn btn-stop" title="Interromper JARVIS imediatamente (Atalho: - ou Esc)">
+                <span>−</span> PARAR
+              </button>
+              <button id="listen-jarvis-btn" class="hud-mini-btn btn-listen" title="Parar o JARVIS e começar a ouvir você (Atalho: +)">
+                <span>+</span> OUVIR
+              </button>
+            </div>
+
+            <span class="composer-hint">💡 [Enter] Enviar</span>
           </div>
 
           <div class="composer-input-row">
@@ -273,15 +289,15 @@
               id="chat-input" 
               class="hud-textarea" 
               rows="1" 
-              placeholder="Digite sua ordem ou aperte [NumLock] para falar..."
+              placeholder="Digite sua mensagem para o JARVIS aqui..."
               autocomplete="off"
             ></textarea>
-            
-            <button id="composer-mic-btn" class="hud-composer-mic-btn" title="Ativar microfone (Tecla NumLock)">
+
+            <button id="composer-mic-btn" class="hud-composer-mic-btn" title="Ativar microfone de voz">
               <span class="mic-glyph">🎙️</span>
             </button>
 
-            <button id="send-btn" class="hud-send-btn" title="Enviar mensagem">
+            <button id="send-btn" class="hud-send-btn" title="Enviar mensagem [Enter]">
               <span>ENVIAR</span>
               <span class="send-arrow">➔</span>
             </button>

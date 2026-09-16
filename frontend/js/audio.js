@@ -114,6 +114,29 @@ export class JarvisAudio {
     osc.stop(now + 0.2);
   }
 
+  playCancelSFX() {
+    if (!this.sfxEnabled || !this.audioCtx) return;
+    this.ensureAudioContext();
+    const ctx = this.audioCtx;
+    const now = ctx.currentTime;
+
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(320, now);
+    osc.frequency.exponentialRampToValueAtTime(120, now + 0.18);
+
+    gain.gain.setValueAtTime(0.15, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
+
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+
+    osc.start(now);
+    osc.stop(now + 0.2);
+  }
+
   playCompletionChime() {
     if (!this.sfxEnabled || !this.audioCtx) return;
     this.ensureAudioContext();
@@ -225,6 +248,7 @@ export class JarvisAudio {
 
   async startListening() {
     this.ensureAudioContext();
+    this.stopSpeaking();
 
     if (this.isListening || this.isTranscribing) return;
 
