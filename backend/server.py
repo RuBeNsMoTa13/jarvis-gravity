@@ -8,7 +8,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
-import speech_recognition as sr
+try:
+    import speech_recognition as sr
+except ImportError:
+    sr = None
 
 from .core.ollama_client import ollama_manager
 from .core.api_client import api_model_manager
@@ -155,6 +158,9 @@ async def transcribe_audio(audio: UploadFile = File(...)):
                 buf.seek(0)
             except Exception as conv_err:
                 logger.warning(f"Tentativa de conversão de formato de áudio: {conv_err}")
+
+        if sr is None:
+            return {"success": False, "error": "Pacote SpeechRecognition não instalado. Instale com: pip install SpeechRecognition"}
 
         recognizer = sr.Recognizer()
 
