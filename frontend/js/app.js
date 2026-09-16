@@ -51,11 +51,20 @@ class JarvisApp {
     // Telemetria
     this.cpuVal = document.getElementById('cpu-val');
     this.cpuBar = document.getElementById('cpu-bar');
+    this.cpuSubinfo = document.getElementById('cpu-subinfo');
+    this.cpuPcTotal = document.getElementById('cpu-pc-total');
+
     this.ramVal = document.getElementById('ram-val');
     this.ramBar = document.getElementById('ram-bar');
+    this.ramSubinfo = document.getElementById('ram-subinfo');
+    this.ramPcTotal = document.getElementById('ram-pc-total');
+
     this.diskVal = document.getElementById('disk-val');
     this.diskBar = document.getElementById('disk-bar');
+    this.diskSubinfo = document.getElementById('disk-subinfo');
+
     this.ollamaStatus = document.getElementById('ollama-status');
+    this.ollamaSubinfo = document.getElementById('ollama-subinfo');
     this.engineModelTag = document.getElementById('engine-model-tag');
 
     // Terminal
@@ -768,30 +777,66 @@ class JarvisApp {
 
   async updateTelemetry() {
     const data = await JarvisAPI.getTelemetry();
-    if (!data.success) return;
+    if (!data || !data.success) return;
 
-    // Atualizar CPU
-    const cpu = Math.round(data.cpu_percent || 0);
-    this.cpuVal.innerText = `${cpu}%`;
-    this.cpuBar.style.width = `${cpu}%`;
+    // 1. CPU do JARVIS em relação ao computador
+    const jarvisCpu = data.jarvis_cpu_percent !== undefined ? Number(data.jarvis_cpu_percent) : Number(data.cpu_percent || 0);
+    const pcCpu = data.pc_cpu_total !== undefined ? Number(data.pc_cpu_total) : 0;
+    this.cpuVal.innerText = `${jarvisCpu.toFixed(1)}%`;
+    // Escala dinâmica da barra para feedback visual claro mesmo com baixo uso
+    const cpuBarFill = Math.min(Math.max(jarvisCpu * 3, jarvisCpu > 0 ? 5 : 0), 100);
+    this.cpuBar.style.width = `${cpuBarFill}%`;
+    if (this.cpuSubinfo) {
+      this.cpuSubinfo.innerText = `Impacto no PC: ${jarvisCpu.toFixed(1)}%`;
+    }
+    if (this.cpuPcTotal) {
+      this.cpuPcTotal.innerText = `Total PC: ${pcCpu}%`;
+    }
 
-    // Atualizar RAM
-    const ramPercent = Math.round(data.ram_percent || 0);
-    this.ramVal.innerText = `${data.ram_used_gb || 0} / ${data.ram_total_gb || 0} GB`;
-    this.ramBar.style.width = `${ramPercent}%`;
+    // 2. RAM do JARVIS em relação ao computador
+    const jarvisRamMb = data.jarvis_ram_mb !== undefined ? Number(data.jarvis_ram_mb) : (data.ram_used_gb ? data.ram_used_gb * 1024 : 0);
+    const pcRamTotal = data.pc_ram_total_gb || data.ram_total_gb || 0;
+    const pcRamUsed = data.pc_ram_used_gb || 0;
+    const ramPercentOfPc = data.jarvis_ram_percent !== undefined ? Number(data.jarvis_ram_percent) : 0;
 
-    // Atualizar Disco
-    const diskPercent = Math.round(data.disk_percent || 0);
-    this.diskVal.innerText = `${data.disk_free_gb || 0} GB LIVRES`;
-    this.diskBar.style.width = `${diskPercent}%`;
+    if (jarvisRamMb >= 1024) {
+      this.ramVal.innerText = `${(jarvisRamMb / 1024).toFixed(2)} GB`;
+    } else {
+      this.ramVal.innerText = `${Math.round(jarvisRamMb)} MB`;
+    }
+    // Barra de preenchimento proporcional à RAM total da máquina
+    const ramBarFill = Math.min(Math.max(ramPercentOfPc * 4, ramPercentOfPc > 0 ? 6 : 0), 100);
+    this.ramBar.style.width = `${ramBarFill}%`;
+    if (this.ramSubinfo) {
+      this.ramSubinfo.innerText = `${ramPercentOfPc.toFixed(1)}% da RAM do PC`;
+    }
+    if (this.ramPcTotal) {
+      this.ramPcTotal.innerText = `PC: ${pcRamUsed} / ${pcRamTotal} GB`;
+    }
 
-    // Atualizar Ollama
+    // 3. Armazenamento do Projeto e Disco
+    const projectMb = data.project_mb !== undefined ? data.project_mb : 0;
+    const diskFree = data.disk_free_gb || 0;
+    this.diskVal.innerText = `${projectMb} MB`;
+    this.diskBar.style.width = `${Math.min(data.disk_percent || 0, 100)}%`;
+    if (this.diskSubinfo) {
+      this.diskSubinfo.innerText = `PC: ${diskFree} GB livres`;
+    }
+
+    // 4. Status e Consumo do Ollama
     if (data.ollama_connected) {
       this.ollamaStatus.innerText = 'CONECTADO';
       this.ollamaStatus.className = 'badge-status online';
     } else {
       this.ollamaStatus.innerText = 'DESCONECTADO';
       this.ollamaStatus.className = 'badge-status offline';
+    }
+    if (this.ollamaSubinfo) {
+      if (data.ollama_ram_mb && data.ollama_ram_mb > 0) {
+        this.ollamaSubinfo.innerText = `RAM IA: ${Math.round(data.ollama_ram_mb)} MB`;
+      } else {
+        this.ollamaSubinfo.innerText = data.ollama_connected ? 'RAM IA: Em Espera' : 'RAM IA: Inativo';
+      }
     }
   }
 

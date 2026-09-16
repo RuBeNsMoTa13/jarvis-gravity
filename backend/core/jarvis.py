@@ -140,10 +140,12 @@ class JarvisBrain:
                 "data": telem
             }
             context_injection = (
-                f"\n[TELEMETRIA DO SISTEMA]:\n"
-                f"- CPU: {telem.get('cpu_percent')}% em uso\n"
-                f"- RAM: {telem.get('ram_used_gb')}GB usados de {telem.get('ram_total_gb')}GB ({telem.get('ram_percent')}%)\n"
-                f"- Armazenamento: {telem.get('disk_free_gb')}GB livres de {telem.get('disk_total_gb')}GB ({telem.get('disk_percent')}% usado)\n"
+                f"\n[TELEMETRIA TÁTICA - JARVIS OS & COMPUTADOR]:\n"
+                f"- Consumo de CPU pelo JARVIS: {telem.get('jarvis_cpu_percent', telem.get('cpu_percent'))}% da capacidade total do PC (Uso geral do PC: {telem.get('pc_cpu_total', 'N/A')}%)\n"
+                f"- Memória RAM do JARVIS: {telem.get('jarvis_ram_mb')} MB ({telem.get('jarvis_ram_percent')}% da RAM física do PC)\n"
+                f"- Memória Total do Computador: {telem.get('pc_ram_used_gb')}GB em uso de {telem.get('pc_ram_total_gb')}GB no total ({telem.get('pc_ram_percent')}%%)\n"
+                f"- Armazenamento do Projeto: {telem.get('project_mb')} MB\n"
+                f"- Disco do Computador: {telem.get('disk_free_gb')}GB livres de {telem.get('disk_total_gb')}GB\n"
             )
 
         elif tool_name == "os_command":

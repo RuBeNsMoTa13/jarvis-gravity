@@ -81,36 +81,47 @@
         </div>
 
         <div class="telemetry-grid">
-          <!-- CPU GAUGE -->
+          <!-- CPU GAUGE (JARVIS PROCESS) -->
           <div class="telemetry-card">
             <div class="card-head">
-              <span>CPU UTILIZATION</span>
-              <span id="cpu-val" class="metric-highlight">0%</span>
+              <span>CPU (JARVIS)</span>
+              <span id="cpu-val" class="metric-highlight">0.0%</span>
             </div>
             <div class="hud-progress-bar">
               <div id="cpu-bar" class="hud-progress-fill" style="width: 0%"></div>
             </div>
+            <div class="telemetry-subinfo">
+              <span id="cpu-subinfo">Impacto no PC: 0.0%</span>
+              <span id="cpu-pc-total">Total PC: 0%</span>
+            </div>
           </div>
 
-          <!-- RAM GAUGE -->
+          <!-- RAM GAUGE (JARVIS MEMORY) -->
           <div class="telemetry-card">
             <div class="card-head">
-              <span>RAM (MEMÓRIA)</span>
-              <span id="ram-val" class="metric-highlight">0 / 0 GB</span>
+              <span>RAM (JARVIS)</span>
+              <span id="ram-val" class="metric-highlight">0 MB</span>
             </div>
             <div class="hud-progress-bar">
               <div id="ram-bar" class="hud-progress-fill fill-amber" style="width: 0%"></div>
             </div>
+            <div class="telemetry-subinfo">
+              <span id="ram-subinfo">0.0% da RAM do PC</span>
+              <span id="ram-pc-total">PC: 0 GB</span>
+            </div>
           </div>
 
-          <!-- DISK GAUGE -->
+          <!-- DISK / PROJECT STORAGE GAUGE -->
           <div class="telemetry-card">
             <div class="card-head">
-              <span>ARMAZENAMENTO</span>
-              <span id="disk-val" class="metric-highlight">0 GB LIVRES</span>
+              <span>PROJETO & DISCO</span>
+              <span id="disk-val" class="metric-highlight">0 MB</span>
             </div>
             <div class="hud-progress-bar">
               <div id="disk-bar" class="hud-progress-fill fill-cyan" style="width: 0%"></div>
+            </div>
+            <div class="telemetry-subinfo">
+              <span id="disk-subinfo">PC: 0 GB livres</span>
             </div>
           </div>
 
@@ -121,7 +132,7 @@
               <span id="ollama-status" class="badge-status online">CONECTADO</span>
             </div>
             <div class="engine-meta">
-              <span>PORTA: 11434 (LOCAL)</span>
+              <span id="ollama-subinfo">RAM IA: Inativo</span>
               <span id="engine-model-tag">Gemma / Local</span>
             </div>
           </div>

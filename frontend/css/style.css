@@ -418,6 +418,16 @@ code,
   background: linear-gradient(90deg, #10b981, #00f3ff);
 }
 
+.telemetry-subinfo {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 9px;
+  font-family: var(--font-mono);
+  color: var(--text-dim);
+  margin-top: 5px;
+}
+
 .status-card {
   border-left: 3px solid var(--green-online);
 }
