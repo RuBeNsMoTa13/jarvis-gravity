@@ -1,7 +1,31 @@
 [
   {
+    "id": "api:google:gemini-2.5-flash",
+    "name": "Gemini 2.5 Flash (Recomendado)",
+    "provider": "google",
+    "model_id": "gemini-2.5-flash",
+    "env_var": "GEMINI_API_KEY",
+    "description": "Modelo Google oficial mais recente com alta velocidade e raciocínio avançado"
+  },
+  {
+    "id": "api:google:gemini-2.0-flash",
+    "name": "Gemini 2.0 Flash",
+    "provider": "google",
+    "model_id": "gemini-2.0-flash",
+    "env_var": "GEMINI_API_KEY",
+    "description": "Modelo Google ultra-rápido de nova geração"
+  },
+  {
+    "id": "api:google:gemini-1.5-flash",
+    "name": "Gemini 1.5 Flash",
+    "provider": "google",
+    "model_id": "gemini-1.5-flash",
+    "env_var": "GEMINI_API_KEY",
+    "description": "Modelo estável de alta velocidade com janela de contexto de 1 milhão de tokens"
+  },
+  {
     "id": "api:google:gemini-3.6-flash",
-    "name": "Gemini 3.6 Flash (Recomendado)",
+    "name": "Gemini 3.6 Flash",
     "provider": "google",
     "model_id": "gemini-3.6-flash",
     "env_var": "GEMINI_API_KEY",

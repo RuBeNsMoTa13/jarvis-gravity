@@ -199,12 +199,29 @@ class JarvisApp {
         <div class="chat-msg jarvis-msg">
           <div class="msg-avatar">◈</div>
           <div class="msg-body">
-            <div class="msg-meta"><span class="msg-sender">JARVIS</span><span class="msg-time">AGORA</span></div>
+            <div class="msg-meta">
+              <span class="msg-sender">JARVIS</span>
+              <span class="msg-time">AGORA</span>
+              <button class="copy-msg-btn" title="Copiar mensagem">📋 Copiar</button>
+            </div>
             <div class="msg-content">Histórico limpo, senhor. Como posso ajudá-lo agora?</div>
           </div>
         </div>
       `;
       this.audio.playToolBeep();
+    });
+
+    // Cópia rápida de mensagens via delegação de eventos
+    this.chatMessages.addEventListener('click', (e) => {
+      const copyBtn = e.target.closest('.copy-msg-btn');
+      if (copyBtn) {
+        const msgBody = copyBtn.closest('.msg-body');
+        const contentDiv = msgBody ? msgBody.querySelector('.msg-content') : null;
+        if (contentDiv) {
+          const textToCopy = contentDiv.innerText || contentDiv.textContent || '';
+          this.copyToClipboard(textToCopy, copyBtn);
+        }
+      }
     });
 
     // Limpar Terminal
@@ -1011,6 +1028,46 @@ class JarvisApp {
     this.toolBanner.classList.add('hidden');
   }
 
+  copyToClipboard(text, btn) {
+    if (!text) return;
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(text).then(() => {
+        this.showCopiedState(btn);
+      }).catch(() => {
+        this.fallbackCopy(text, btn);
+      });
+    } else {
+      this.fallbackCopy(text, btn);
+    }
+  }
+
+  fallbackCopy(text, btn) {
+    try {
+      const textarea = document.createElement('textarea');
+      textarea.value = text;
+      textarea.style.position = 'fixed';
+      textarea.style.left = '-9999px';
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textarea);
+      this.showCopiedState(btn);
+    } catch (e) {
+      console.error('Falha ao copiar:', e);
+    }
+  }
+
+  showCopiedState(btn) {
+    if (!btn) return;
+    const originalHTML = btn.innerHTML;
+    btn.classList.add('copied');
+    btn.innerHTML = '✓ Copiado!';
+    setTimeout(() => {
+      btn.classList.remove('copied');
+      btn.innerHTML = originalHTML;
+    }, 2000);
+  }
+
   appendMessage(role, content) {
     const msgEl = document.createElement('div');
     msgEl.className = `chat-msg ${role === 'user' ? 'user-msg' : 'jarvis-msg'}`;
@@ -1025,10 +1082,18 @@ class JarvisApp {
         <div class="msg-meta">
           <span class="msg-sender">${sender}</span>
           <span class="msg-time">${now}</span>
+          <button class="copy-msg-btn" title="Copiar mensagem">📋 Copiar</button>
         </div>
         <div class="msg-content">${this.renderMarkdown(content)}</div>
       </div>
     `;
+
+    const copyBtn = msgEl.querySelector('.copy-msg-btn');
+    if (copyBtn) {
+      copyBtn.addEventListener('click', () => {
+        this.copyToClipboard(content, copyBtn);
+      });
+    }
 
     this.chatMessages.appendChild(msgEl);
     this.chatMessages.scrollTop = this.chatMessages.scrollHeight;
@@ -1046,6 +1111,7 @@ class JarvisApp {
         <div class="msg-meta">
           <span class="msg-sender">JARVIS</span>
           <span class="msg-time">${now}</span>
+          <button class="copy-msg-btn" title="Copiar resposta">📋 Copiar</button>
         </div>
         <div class="msg-tools-container"></div>
         <div class="msg-content"><span class="streaming-cursor">█</span></div>
@@ -1057,9 +1123,19 @@ class JarvisApp {
 
     const contentDiv = msgEl.querySelector('.msg-content');
     const toolsContainer = msgEl.querySelector('.msg-tools-container');
+    const copyBtn = msgEl.querySelector('.copy-msg-btn');
+
+    let currentRawMarkdown = '';
+    if (copyBtn) {
+      copyBtn.addEventListener('click', () => {
+        const textToCopy = currentRawMarkdown || contentDiv.innerText || '';
+        this.copyToClipboard(textToCopy, copyBtn);
+      });
+    }
 
     return {
       updateContent: (rawMarkdown) => {
+        currentRawMarkdown = rawMarkdown;
         contentDiv.innerHTML = this.renderMarkdown(rawMarkdown);
       },
       appendToolBadge: (toolEvent) => {

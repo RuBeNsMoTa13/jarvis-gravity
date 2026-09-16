@@ -32,7 +32,7 @@ load_dotenv_if_present()
 PROVIDER_DEFAULTS = {
     "google": {
         "env_var": "GEMINI_API_KEY",
-        "default_model": "gemini-3.6-flash",
+        "default_model": "gemini-2.5-flash",
         "base_url": None
     },
     "openai": {
@@ -175,28 +175,23 @@ class ApiModelManager:
     def list_google_models(self, session_key: Optional[str] = None) -> List[Dict[str, Any]]:
         """
         Consulta a API do Google Gemini em tempo real e retorna todos os modelos disponíveis para a chave.
+        Funciona nativamente mesmo se o pacote google-genai não estiver instalado.
         """
         key = self.resolve_api_key({"provider": "google", "env_var": "GEMINI_API_KEY"}, session_key)
         if not key:
             return []
 
+        ignored_keywords = [
+            "embedding", "bison", "aqa", "imagen", "veo", "lyria", "robotics", "transcribe"
+        ]
+
         try:
             from google import genai
             client = genai.Client(api_key=key)
             result = []
-            
-            # Listar modelos disponíveis
             for m in client.models.list():
-                # Filtrar modelos de chat/geração de conteúdo
                 m_name = getattr(m, 'name', '') or ''
-                # Remover prefixo 'models/'
                 clean_name = m_name.replace("models/", "")
-                
-                # Ignorar embeddings, ferramentas não-chat e versões 1 e 2 descontinuadas
-                ignored_keywords = [
-                    "embedding", "bison", "aqa", "imagen", "veo", "lyria", "robotics",
-                    "transcribe", "gemini-1.", "gemini-2.", "gemini-1.5", "gemini-2.0", "gemini-2.5"
-                ]
                 if any(x in clean_name.lower() for x in ignored_keywords):
                     continue
 
@@ -210,11 +205,38 @@ class ApiModelManager:
                     "provider": "google",
                     "description": desc[:150]
                 })
-
             return result
-        except Exception as e:
-            logger.warning(f"Não foi possível listar modelos do Google via API: {e}")
-            return []
+        except (ImportError, ModuleNotFoundError, Exception) as sdk_err:
+            logger.info(f"Tentando listagem de modelos Google via REST nativo (motivo: {sdk_err})")
+            try:
+                import urllib.request
+                import json
+                req = urllib.request.Request(
+                    f"https://generativelanguage.googleapis.com/v1beta/models?key={key}",
+                    headers={"User-Agent": "JARVIS-OS/1.0"}
+                )
+                with urllib.request.urlopen(req, timeout=10) as resp:
+                    data = json.loads(resp.read().decode("utf-8"))
+                    result = []
+                    for m in data.get("models", []):
+                        m_name = m.get("name", "")
+                        clean_name = m_name.replace("models/", "")
+                        methods = m.get("supportedGenerationMethods", [])
+                        if "generateContent" not in methods:
+                            continue
+                        if any(x in clean_name.lower() for x in ignored_keywords):
+                            continue
+                        result.append({
+                            "id": f"api:google:{clean_name}",
+                            "name": m.get("displayName", clean_name),
+                            "model_id": clean_name,
+                            "provider": "google",
+                            "description": (m.get("description") or "")[:150]
+                        })
+                    return result
+            except Exception as rest_err:
+                logger.warning(f"Não foi possível listar modelos do Google via API REST: {rest_err}")
+                return []
 
     def add_model(self, data: Dict[str, Any]) -> Dict[str, Any]:
         """
@@ -305,15 +327,44 @@ class ApiModelManager:
 
         try:
             if provider == "google":
-                from google import genai
-                client = genai.Client(api_key=key)
-                # Chamada de teste rápida
-                response = client.models.generate_content(
-                    model=model_id or "gemini-3.6-flash",
-                    contents="Responda apenas: OK"
-                )
-                text = response.text or "OK"
-                return {"success": True, "message": f"Conexão com Google Gemini bem-sucedida! Resposta: {text.strip()}"}
+                use_sdk = False
+                try:
+                    from google import genai
+                    use_sdk = True
+                except (ImportError, ModuleNotFoundError):
+                    use_sdk = False
+
+                if use_sdk:
+                    client = genai.Client(api_key=key)
+                    response = client.models.generate_content(
+                        model=model_id or "gemini-2.5-flash",
+                        contents="Responda apenas: OK"
+                    )
+                    text = response.text or "OK"
+                    return {"success": True, "message": f"Conexão com Google Gemini bem-sucedida! Resposta: {text.strip()}"}
+                else:
+                    # REST nativo via urllib (não precisa de nenhum pacote pip instalado)
+                    import urllib.request
+                    import urllib.error
+                    import json
+                    real_model = model_id or "gemini-2.5-flash"
+                    payload = json.dumps({"contents": [{"parts": [{"text": "Responda apenas: OK"}]}]}).encode("utf-8")
+
+                    def try_gemini_test(m_name):
+                        url = f"https://generativelanguage.googleapis.com/v1beta/models/{m_name}:generateContent?key={key}"
+                        req = urllib.request.Request(url, data=payload, headers={"Content-Type": "application/json", "User-Agent": "JARVIS-OS/1.0"})
+                        with urllib.request.urlopen(req, timeout=15) as resp:
+                            data = json.loads(resp.read().decode("utf-8"))
+                            return data["candidates"][0]["content"]["parts"][0]["text"]
+
+                    try:
+                        ans = try_gemini_test(real_model)
+                        return {"success": True, "message": f"Conexão com Google Gemini (REST) bem-sucedida! Resposta: {ans.strip()}"}
+                    except urllib.error.HTTPError as he:
+                        if he.code == 404 and real_model != "gemini-2.5-flash":
+                            ans = try_gemini_test("gemini-2.5-flash")
+                            return {"success": True, "message": f"Conexão com Google Gemini (gemini-2.5-flash) bem-sucedida! Resposta: {ans.strip()}"}
+                        raise
             else:
                 from openai import AsyncOpenAI
                 url = base_url or PROVIDER_DEFAULTS.get(provider, {}).get("base_url") or "https://api.openai.com/v1"
@@ -340,6 +391,7 @@ class ApiModelManager:
     ) -> AsyncGenerator[str, None]:
         """
         Executa streaming token-por-token de provedores de API externos.
+        Possui fallback automático para REST nativo (urllib) caso google-genai não esteja instalado.
         """
         api_key = self.resolve_api_key(model_cfg, session_key)
         if not api_key:
@@ -352,27 +404,112 @@ class ApiModelManager:
 
         try:
             if provider == "google":
-                from google import genai
-                client = genai.Client(api_key=api_key)
-                
-                # Montar prompt unificado
-                prompt_parts = []
-                if system_prompt:
-                    prompt_parts.append(f"INSTRUÇÃO DO SISTEMA:\n{system_prompt}\n\n")
-                
-                for m in messages:
-                    role_label = "USUÁRIO" if m["role"] == "user" else "ASSISTENTE"
-                    prompt_parts.append(f"{role_label}: {m['content']}")
-                
-                full_contents = "\n\n".join(prompt_parts)
+                use_sdk = False
+                try:
+                    from google import genai
+                    use_sdk = True
+                except (ImportError, ModuleNotFoundError):
+                    use_sdk = False
 
-                response_stream = client.models.generate_content_stream(
-                    model=model_id,
-                    contents=full_contents,
-                )
-                for chunk in response_stream:
-                    if chunk.text:
-                        yield chunk.text
+                if use_sdk:
+                    client = genai.Client(api_key=api_key)
+                    prompt_parts = []
+                    if system_prompt:
+                        prompt_parts.append(f"INSTRUÇÃO DO SISTEMA:\n{system_prompt}\n\n")
+                    
+                    for m in messages:
+                        role_label = "USUÁRIO" if m["role"] == "user" else "ASSISTENTE"
+                        prompt_parts.append(f"{role_label}: {m['content']}")
+                    
+                    full_contents = "\n\n".join(prompt_parts)
+
+                    response_stream = client.models.generate_content_stream(
+                        model=model_id,
+                        contents=full_contents,
+                    )
+                    for chunk in response_stream:
+                        if chunk.text:
+                            yield chunk.text
+                else:
+                    # Streaming nativo via API REST Google Gemini com SSE
+                    import urllib.request
+                    import urllib.error
+                    import json
+
+                    contents_payload = []
+                    for m in messages:
+                        role = "user" if m.get("role") == "user" else "model"
+                        contents_payload.append({
+                            "role": role,
+                            "parts": [{"text": m.get("content", "")}]
+                        })
+
+                    body_dict = {
+                        "contents": contents_payload,
+                        "generationConfig": {
+                            "temperature": temperature
+                        }
+                    }
+                    if system_prompt:
+                        body_dict["system_instruction"] = {
+                            "parts": [{"text": system_prompt}]
+                        }
+
+                    def build_request(target_model):
+                        stream_url = f"https://generativelanguage.googleapis.com/v1beta/models/{target_model}:streamGenerateContent?alt=sse&key={api_key}"
+                        req_bytes = json.dumps(body_dict).encode("utf-8")
+                        return urllib.request.Request(
+                            stream_url,
+                            data=req_bytes,
+                            headers={"Content-Type": "application/json", "User-Agent": "JARVIS-OS/1.0"}
+                        )
+
+                    req = build_request(model_id)
+                    try:
+                        with urllib.request.urlopen(req, timeout=60) as resp:
+                            for raw_line in resp:
+                                line = raw_line.decode("utf-8")
+                                if line.startswith("data: "):
+                                    json_str = line[6:].strip()
+                                    if not json_str:
+                                        continue
+                                    try:
+                                        chunk_obj = json.loads(json_str)
+                                        candidates = chunk_obj.get("candidates", [])
+                                        if candidates:
+                                            parts = candidates[0].get("content", {}).get("parts", [])
+                                            for p in parts:
+                                                t = p.get("text")
+                                                if t:
+                                                    yield t
+                                    except Exception:
+                                        pass
+                    except urllib.error.HTTPError as http_err:
+                        err_body = http_err.read().decode("utf-8", errors="ignore")
+                        logger.error(f"Erro HTTP Gemini ({http_err.code}): {err_body}")
+                        if http_err.code == 404 and model_id != "gemini-2.5-flash":
+                            fallback_model = "gemini-2.5-flash"
+                            yield f"*(Modelo '{model_id}' não disponível. Alternando automaticamente para {fallback_model}...)*\n\n"
+                            fb_req = build_request(fallback_model)
+                            with urllib.request.urlopen(fb_req, timeout=60) as fb_resp:
+                                for fb_raw in fb_resp:
+                                    fb_line = fb_raw.decode("utf-8")
+                                    if fb_line.startswith("data: "):
+                                        fb_json = fb_line[6:].strip()
+                                        if fb_json:
+                                            try:
+                                                chunk_obj = json.loads(fb_json)
+                                                candidates = chunk_obj.get("candidates", [])
+                                                if candidates:
+                                                    parts = candidates[0].get("content", {}).get("parts", [])
+                                                    for p in parts:
+                                                        t = p.get("text")
+                                                        if t:
+                                                            yield t
+                                            except Exception:
+                                                pass
+                        else:
+                            yield f"\n[Erro na API Google Gemini ({http_err.code})]: {err_body}"
 
             else:
                 # Provedores compatíveis com OpenAI (OpenAI, Groq, OpenRouter, DeepSeek, Custom)

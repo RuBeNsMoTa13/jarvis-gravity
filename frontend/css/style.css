@@ -60,7 +60,42 @@ html, body {
   font-family: var(--font-sans);
   font-size: 14px;
   line-height: 1.5;
+}
+
+/* Permitir seleção e cópia de texto em todas as áreas de conteúdo */
+.chat-messages-container,
+.chat-messages-container *,
+.chat-msg,
+.msg-body,
+.msg-content,
+.msg-content *,
+.hud-textarea,
+input,
+textarea,
+pre,
+code,
+.dossier-body,
+.dossier-body *,
+.terminal-output,
+.terminal-output *,
+.terminal-content,
+.terminal-content *,
+.modal-body,
+.modal-body * {
+  user-select: text !important;
+  -webkit-user-select: text !important;
+}
+
+/* Desabilitar seleção apenas em elementos puramente decorativos ou botões */
+.hud-topbar,
+.reactor-container,
+.hud-status-bar,
+.panel-tag,
+.tool-banner,
+.hud-scanlines,
+.hud-vignette {
   user-select: none;
+  -webkit-user-select: none;
 }
 
 /* ==========================================================================
@@ -773,6 +808,40 @@ html, body {
   font-family: var(--font-mono);
   font-size: 9px;
   color: var(--text-dim);
+}
+
+.copy-msg-btn {
+  margin-left: 8px;
+  background: rgba(0, 243, 255, 0.05);
+  border: 1px solid rgba(0, 243, 255, 0.2);
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  padding: 2px 7px;
+  border-radius: 4px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  opacity: 0.7;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.copy-msg-btn:hover {
+  opacity: 1;
+  background: rgba(0, 243, 255, 0.15);
+  border-color: var(--cyan-core);
+  color: var(--cyan-core);
+  box-shadow: 0 0 8px var(--cyan-glow);
+}
+
+.copy-msg-btn.copied {
+  opacity: 1;
+  border-color: #00ff88;
+  color: #00ff88;
+  background: rgba(0, 255, 136, 0.15);
+  box-shadow: 0 0 8px rgba(0, 255, 136, 0.4);
 }
 
 .msg-content {
