@@ -1,9 +1,46 @@
 import subprocess
 import os
+import platform
+import shlex
 import shutil
 import re
 import time
-from typing import Dict, Any
+from functools import lru_cache
+from typing import Dict, Any, List, Optional
+
+
+# ==========================================================================
+# DETECÇÃO DE AMBIENTE HÍBRIDO (LOCAL WINDOWS x NUVEM)
+# ==========================================================================
+
+@lru_cache(maxsize=1)
+def is_cloud_environment() -> bool:
+    """
+    Detecta se o A.T.O.M. está rodando em nuvem/container.
+    Critérios: variável RENDER (Render.com), CONTAINER/DOCKER, ATOM_CLOUD=1
+    ou qualquer sistema operacional que não seja Windows.
+    ATOM_FORCE_LOCAL=1 força o modo local (útil para desenvolvimento).
+    """
+    if os.environ.get("ATOM_FORCE_LOCAL", "").strip() in ("1", "true", "yes"):
+        return False
+    if os.environ.get("ATOM_CLOUD", "").strip() in ("1", "true", "yes"):
+        return True
+    if os.environ.get("RENDER") or os.environ.get("CONTAINER") or os.environ.get("DOCKER"):
+        return True
+    if os.path.exists("/.dockerenv"):
+        return True
+    return platform.system() != "Windows"
+
+
+def get_environment_info() -> Dict[str, Any]:
+    """Resumo do ambiente de execução para o HUD e para o cérebro do A.T.O.M."""
+    cloud = is_cloud_environment()
+    return {
+        "mode": "cloud" if cloud else "local",
+        "is_cloud": cloud,
+        "os": platform.system(),
+        "platform": "Render" if os.environ.get("RENDER") else ("Container" if cloud else "Windows Desktop"),
+    }
 
 # Comandos de alta periculosidade que exigem confirmação explícita no modo seguro
 DANGEROUS_PATTERNS = [
@@ -38,6 +75,28 @@ APP_SHORTCUTS = {
     "chrome": "chrome.exe"
 }
 
+# Equivalentes web usados no modo nuvem (o navegador do operador abre a aba)
+CLOUD_WEB_EQUIVALENTS = {
+    "calc": "https://www.google.com/search?q=calculadora",
+    "calculadora": "https://www.google.com/search?q=calculadora",
+    "notepad": "https://docs.new",
+    "bloco de notas": "https://docs.new",
+    "code": "https://vscode.dev",
+    "vscode": "https://vscode.dev",
+    "paint": "https://www.tldraw.com",
+    "edge": "https://www.bing.com",
+    "chrome": "https://www.google.com",
+}
+
+# Comandos somente-leitura permitidos dentro do container de nuvem
+CLOUD_SAFE_COMMANDS = {
+    "date", "get-date", "echo", "write-output", "whoami", "hostname", "uname",
+    "pwd", "get-location", "ls", "dir", "get-childitem", "uptime", "df", "free",
+    "python", "python3", "pip", "nproc", "get-process", "ps"
+}
+CLOUD_FORBIDDEN_TOKENS = re.compile(r"[;&|`$<>]|\.\.|\.env|/etc/|/proc/|\bsudo\b|\bcurl\b|\bwget\b", re.IGNORECASE)
+
+
 def is_dangerous_command(command: str) -> bool:
     """Verifica se o comando contém padrões potencialmente destrutivos."""
     for pattern in DANGEROUS_PATTERNS:
@@ -45,17 +104,69 @@ def is_dangerous_command(command: str) -> bool:
             return True
     return False
 
+
+def is_cloud_safe_command(command: str) -> bool:
+    """Allowlist restrita: apenas comandos de leitura sem encadeamento/redirecionamento."""
+    if CLOUD_FORBIDDEN_TOKENS.search(command) or is_dangerous_command(command):
+        return False
+    first = command.strip().split()[0].lower() if command.strip() else ""
+    if first not in CLOUD_SAFE_COMMANDS:
+        return False
+    # python/pip apenas para consultas de versão/listagem
+    if first in ("python", "python3"):
+        return command.strip().lower() in ("python --version", "python3 --version", "python -v")
+    if first == "pip":
+        return command.strip().lower() in ("pip list", "pip --version", "pip freeze")
+    return True
+
+
+def _resolve_shell_command(command: str) -> Optional[List[str]]:
+    """Retorna o comando para o shell disponível (PowerShell no Windows, pwsh ou sh no Linux)."""
+    for exe in ("powershell.exe", "powershell", "pwsh"):
+        if shutil.which(exe):
+            return [exe, "-NoProfile", "-NonInteractive", "-Command", command]
+    if shutil.which("sh"):
+        # Sem shell interpretando o texto: separação segura dos argumentos
+        try:
+            return shlex.split(command)
+        except ValueError:
+            return None
+    return None
+
+
 def open_application(app_name: str) -> Dict[str, Any]:
     """
     Abre aplicativos comuns do Windows ou URLs no navegador padrão.
+    - Local (Windows): executa o .exe ou usa os.startfile.
+    - Nuvem: devolve a intenção `client_action` para o navegador do operador abrir o link.
     """
     cleaned = app_name.strip().lower()
-    
-    # Se for uma URL
-    if cleaned.startswith("http://") or cleaned.startswith("https://"):
+    is_url = cleaned.startswith("http://") or cleaned.startswith("https://")
+
+    # --- MODO NUVEM: nunca executa binários no container ---
+    if is_cloud_environment():
+        url = app_name.strip() if is_url else CLOUD_WEB_EQUIVALENTS.get(cleaned)
+        if url:
+            return {
+                "success": True,
+                "client_action": "open_url",
+                "url": url,
+                "message": f"Modo nuvem: o navegador do operador abrirá {url}"
+            }
+        return {
+            "success": False,
+            "cloud_blocked": True,
+            "error": f"'{app_name}' é um aplicativo nativo do Windows e não pode ser aberto no modo nuvem."
+        }
+
+    # --- MODO LOCAL (WINDOWS) ---
+    if is_url:
         try:
-            os.startfile(cleaned)
-            return {"success": True, "message": f"URL aberta no navegador: {cleaned}"}
+            if hasattr(os, "startfile"):
+                os.startfile(app_name.strip())
+                return {"success": True, "message": f"URL aberta no navegador: {cleaned}"}
+            return {"success": True, "client_action": "open_url", "url": app_name.strip(),
+                    "message": "Navegador do operador abrirá o link."}
         except Exception as e:
             return {"success": False, "error": str(e)}
 
@@ -78,13 +189,26 @@ def open_application(app_name: str) -> Dict[str, Any]:
 
 def execute_os_command(command: str, timeout: int = 15, autonomous: bool = False) -> Dict[str, Any]:
     """
-    Executa comandos do sistema operacional Windows via PowerShell de forma controlada.
+    Executa comandos do sistema operacional de forma controlada.
+    - Local (Windows): PowerShell com bloqueio de comandos destrutivos (exceto modo autônomo).
+    - Nuvem: sandbox com allowlist somente-leitura, mesmo no modo autônomo.
     """
     if not command or not command.strip():
         return {"success": False, "error": "Comando vazio"}
 
     command = command.strip()
-    
+    cloud = is_cloud_environment()
+
+    # Proteção do container: allowlist estrita, independente do modo autônomo
+    if cloud and not is_cloud_safe_command(command):
+        return {
+            "success": False,
+            "blocked": True,
+            "cloud_blocked": True,
+            "command": command,
+            "error": "Modo nuvem: apenas comandos de leitura (ex: date, whoami, uname, ls) são permitidos no container."
+        }
+
     # Checagem de segurança
     if not autonomous and is_dangerous_command(command):
         return {
@@ -95,11 +219,19 @@ def execute_os_command(command: str, timeout: int = 15, autonomous: bool = False
             "error": "Comando com potencial de dano ao sistema identificado. Requer confirmação explícita do operador."
         }
 
+    argv = _resolve_shell_command(command)
+    if not argv:
+        return {
+            "success": False,
+            "command": command,
+            "error": "Nenhum shell compatível (PowerShell/pwsh/sh) disponível neste ambiente."
+        }
+
     start_time = time.time()
     try:
-        # Executar com PowerShell
+        # Executar com o shell disponível (PowerShell no Windows)
         process = subprocess.run(
-            ["powershell.exe", "-NoProfile", "-NonInteractive", "-Command", command],
+            argv,
             capture_output=True,
             text=True,
             timeout=timeout,
@@ -151,8 +283,8 @@ def _get_process():
 
 def get_system_telemetry() -> Dict[str, Any]:
     """
-    Coleta métricas em tempo real do JARVIS (processo Python + Ollama)
-    em relação aos recursos totais do computador.
+    Coleta métricas em tempo real do A.T.O.M. (processo Python + Ollama)
+    em relação aos recursos totais do computador ou container.
     """
     try:
         import psutil
@@ -232,7 +364,8 @@ def get_system_telemetry() -> Dict[str, Any]:
 
         return {
             "success": True,
-            # Métricas específicas do JARVIS
+            "environment": get_environment_info(),
+            # Métricas específicas do A.T.O.M. (chaves jarvis_* mantidas por compatibilidade)
             "jarvis_cpu_percent": jarvis_cpu_percent,
             "jarvis_cpu_raw": round(jarvis_cpu_raw, 1),
             "jarvis_ram_mb": total_jarvis_ram_mb,
