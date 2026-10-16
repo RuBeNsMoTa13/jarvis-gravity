@@ -1,27 +1,11 @@
 [
   {
-    "id": "api:google:gemini-2.5-flash",
-    "name": "Gemini 2.5 Flash (Recomendado)",
+    "id": "api:google:gemini-flash-latest",
+    "name": "Gemini Flash (Mais Recente - Auto)",
     "provider": "google",
-    "model_id": "gemini-2.5-flash",
+    "model_id": "gemini-flash-latest",
     "env_var": "GEMINI_API_KEY",
-    "description": "Modelo Google oficial mais recente com alta velocidade e raciocínio avançado"
-  },
-  {
-    "id": "api:google:gemini-2.0-flash",
-    "name": "Gemini 2.0 Flash",
-    "provider": "google",
-    "model_id": "gemini-2.0-flash",
-    "env_var": "GEMINI_API_KEY",
-    "description": "Modelo Google ultra-rápido de nova geração"
-  },
-  {
-    "id": "api:google:gemini-1.5-flash",
-    "name": "Gemini 1.5 Flash",
-    "provider": "google",
-    "model_id": "gemini-1.5-flash",
-    "env_var": "GEMINI_API_KEY",
-    "description": "Modelo estável de alta velocidade com janela de contexto de 1 milhão de tokens"
+    "description": "Aponta automaticamente para o modelo Flash ativo mais recente do Google (Suporta Visão de Tela)"
   },
   {
     "id": "api:google:gemini-3.6-flash",
@@ -29,56 +13,15 @@
     "provider": "google",
     "model_id": "gemini-3.6-flash",
     "env_var": "GEMINI_API_KEY",
-    "description": "Modelo Google padrão de última geração ultra-rápido com raciocínio e multimodal"
+    "description": "Modelo de última geração ultra-rápido com raciocínio e visão multimodal"
   },
   {
-    "id": "api:google:gemini-3.8-flash",
-    "name": "Gemini 3.8 Flash",
-    "provider": "google",
-    "model_id": "gemini-3.8-flash",
-    "env_var": "GEMINI_API_KEY",
-    "description": "Modelo Google de alta velocidade para tarefas complexas"
-  },
-  {
-    "id": "api:google:gemini-3.6-pro",
-    "name": "Gemini 3.6 Pro",
-    "provider": "google",
-    "model_id": "gemini-3.6-pro",
-    "env_var": "GEMINI_API_KEY",
-    "description": "Modelo Google de máxima capacidade e raciocínio profundo"
-  },
-  {
-    "id": "api:google:gemini-flash-latest",
-    "name": "Gemini Flash (Mais Recente)",
-    "provider": "google",
-    "model_id": "gemini-flash-latest",
-    "env_var": "GEMINI_API_KEY",
-    "description": "Aponta automaticamente para o modelo Flash estável mais recente da Google"
-  },
-  {
-    "id": "api:gpt-4o-mini",
-    "name": "GPT-4o Mini",
-    "provider": "openai",
-    "model_id": "gpt-4o-mini",
-    "env_var": "OPENAI_API_KEY",
-    "description": "Modelo rápido e econômico da OpenAI"
-  },
-  {
-    "id": "api:groq-llama-3.3-70b",
-    "name": "Groq LLaMA 3.3 70B",
+    "id": "api:groq-llama-vision",
+    "name": "Groq LLaMA 4 Scout Vision (Lê Tela Grátis)",
     "provider": "groq",
-    "model_id": "llama-3.3-70b-versatile",
+    "model_id": "meta-llama/llama-4-scout-17b-16e-instruct",
     "base_url": "https://api.groq.com/openai/v1",
     "env_var": "GROQ_API_KEY",
-    "description": "Inferência de altíssima velocidade e baixa latência via Groq"
-  },
-  {
-    "id": "api:deepseek-chat",
-    "name": "DeepSeek V3",
-    "provider": "deepseek",
-    "model_id": "deepseek-chat",
-    "base_url": "https://api.deepseek.com/v1",
-    "env_var": "DEEPSEEK_API_KEY",
-    "description": "Modelo de alto desempenho e raciocínio DeepSeek"
+    "description": "Modelo multimodal gratuito na Groq capaz de enxergar sua tela"
   }
 ]
