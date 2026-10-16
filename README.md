@@ -1,107 +1,123 @@
-# ◈ J.A.R.V.I.S. - Tactical Assistant OS
+# ⚛️ A.T.O.M. — Artificial Tactical Operating Matrix
 
-Assistente de inteligência artificial em tempo real estilo **JARVIS**, operando **100% localmente com baixa latência e privacidade via Ollama**, com interface holográfica Stark Industries HUD, pesquisa na web, geração automática de dossiês em Markdown e automação de comandos no Windows.
+> **Sistema Operacional Tático Híbrido com Inteligência Artificial Multimodal, Pesquisa Aprofundada & HUD de Comando**  
+> **Concebido & Desenvolvido por:** Rubens Mota  
+> **Versão:** 2.0 (Produção Tática)  
+> **Design System:** Dark Tactical Red (`#0a0a0a` / `#ef4444`)
+
+---
+
+## 📋 Visão Geral
+
+O **A.T.O.M.** (*Artificial Tactical Operating Matrix*) é um sistema operacional com inteligência artificial híbrida adaptativa, projetado para execução nativa no **Windows Desktop** e deploy em escala em containers de nuvem (**Render / Docker**).
+
+O sistema conta com um cockpit HUD imersivo estilo militar/sci-fi com animação quântica em Canvas 2D, combinando percepção visual de tela em tempo real, pesquisa sintética em bases acadêmicas (**arXiv**) e web (**DuckDuckGo + Jina Reader**), automação de sistema operacional e exportação de dossiês em Markdown com download seguro.
 
 ---
 
 ## 🚀 Funcionalidades Principais
 
-1. **Inferência Local Offline com Baixa Latência (Ollama)**:
-   - Integração com a biblioteca oficial Python `ollama`.
-   - Streaming em tempo real token-por-token via Server-Sent Events (SSE).
-   - Suporte a qualquer modelo instalado (`gemma4:latest`, `gemma:latest`, `llama3.2`, `mistral`, `deepseek-r1`, `qwen2.5`, etc.).
-   - Baixe novos modelos diretamente pelo painel do HUD com barra de progresso em tempo real (`Ollama Pull`).
+### 1. 👁️ Visão Multimodal de Tela em Tempo Real
+- Captura de tela com baixa latência via `navigator.mediaDevices.getDisplayMedia`.
+- Compressão inteligente off-screen em `<canvas>` (redimensionamento a máx 1280px mantendo proporção, JPEG qualidade 0.75).
+- Payload ultraleve (~150KB) injetado diretamente em modelos com visão computacional:
+  - **Google Gemini** (`gemini-flash-latest`, `gemini-3.6-flash`) via `types.Part.from_bytes` e fallback REST `inline_data`.
+  - **Groq Cloud Vision** (`meta-llama/llama-4-scout-17b-16e-instruct`) via data URL base64.
+- Badge flutuante tático no compositor indicando transmissão ativa.
 
-2. **Modelos em Nuvem via API (Google Gemini, OpenAI, Groq, OpenRouter, DeepSeek)**:
-   - 🛡️ **Segurança Total (Zero-Persistência em Git)**: Nenhuma chave de API é gravada em arquivos JSON do projeto.
-   - **Variáveis de Ambiente / .env**: Configure suas chaves no arquivo `.env` (já incluído no `.gitignore`) ou nas variáveis do sistema operacional (`GEMINI_API_KEY`, `OPENAI_API_KEY`, `GROQ_API_KEY`, `DEEPSEEK_API_KEY`, etc.).
-   - **Chave em Sessão de Navegador**: Se preferir, insira sua chave diretamente pela interface; ela fica salva **apenas na memória da aba aberta (`sessionStorage`)** e é transmitida de forma volátil durante as mensagens.
-   - **Alternância Unificada no Topo**: O seletor de modelos do cabeçalho agrupa automaticamente `🏠 Modelos Locais (Ollama)` e `☁️ Modelos em Nuvem (API)`.
+### 2. 🔬 Pesquisa Aprofundada & Síntese Científica
+- **Web em Tempo Real:** Busca resiliente sem chaves via DuckDuckGo (`ddgs`).
+- **Extração Limpa de Artigos:** Bypass de paywalls e remoção de poluição visual através do Jina Reader (`r.jina.ai`).
+- **Base Acadêmica do arXiv:** Consulta direta à API XML do arXiv (`export.arxiv.org`), extraindo resumos, autores, IDs e links de PDFs científicos.
+- **Cache de Telemetria:** Cache em memória com TTL de 30 minutos para consultas repetidas.
 
-3. **Interface Holográfica Stark HUD**:
-   - **Reator Arc Reativo (Canvas)**: Animações fluídas a 60fps que reagem dinamicamente aos estados do assistente (*Em Espera*, *Ouvindo*, *Processando*, *Falando*).
-   - **Design Futurista**: Glassmorphism, iluminação neon azul-ciano e âmbar, scanlines táticas e tipografia sci-fi Orbitron.
-   - **Telemetria de Sistema**: Monitoramento em tempo real de CPU, Memória RAM, Armazenamento e status do servidor local Ollama.
-   - **Terminal PowerShell HUD**: Visualização ao vivo dos comandos executados no sistema operacional.
+### 3. 📄 Central de Dossiês & Downloads Seguros
+- Geração automática de relatórios Markdown estruturados com frontmatter YAML, metadados de autoria (*Rubens Mota*), tags e síntese executiva.
+- Proteção estrita contra *path traversal* (`../`) na resolução de arquivos com [get_research_file_path()](file:///c:/Users/Rubens/Desktop/projetinhos/jarvis%20gravity/backend/tools/markdown_tool.py#L18-L37).
+- Download direto via endpoint `GET /api/researches/{filename}/download` (`FileResponse`).
+- Botões de download com 1 clique integrados diretamente nos balões do chat e no modal de leitura.
+- Fallback em `localStorage` para leitura offline de relatórios no navegador.
 
-3. **Conversação em Tempo Real (Voz e Texto)**:
-   - **Reconhecimento de Fala (STT)**: Fale com o JARVIS clicando no botão do microfone ou simplesmente **segurando a Barra de Espaço** (*Push-To-Talk*).
-   - **Síntese Vocal (TTS)**: O JARVIS responde por voz com entonação configurável, velocidade, tom e seleção de voz.
-   - **Efeitos Sonoros Sci-Fi Sintetizados**: Sons de inicialização, bips de confirmação e alertas táticos gerados diretamente pela Web Audio API sem arquivos externos.
+### 4. 🌐 Arquitetura Híbrida Adaptativa (Local Windows vs. Nuvem Render)
+- A função [is_cloud_environment()](file:///c:/Users/Rubens/Desktop/projetinhos/jarvis%20gravity/backend/tools/system_tool.py) identifica automaticamente o ambiente através de variáveis (`RENDER`, `PORT`, `RAILWAY_ENVIRONMENT`, etc.):
+  - **Em Desktop Windows:** Executa ferramentas do sistema (`calc.exe`, `notepad.exe`, comandos PowerShell) localmente via `subprocess.Popen`.
+  - **Em Container Nuvem:** Bloqueia comandos destrutivos via allowlist e emite eventos SSE `client_action` com ação `open_url` para que links e ferramentas sejam abertos diretamente no navegador do operador.
 
-4. **Pesquisa na Web Integrada**:
-   - O JARVIS pesquisa a internet em tempo real via DuckDuckGo ao detectar perguntas sobre tópicos recentes, cotações, notícias ou comandos explícitos (*"JARVIS, pesquise sobre..."*).
+### 5. 🎨 Design System: Dark Tactical Red
+- **Paleta Tática:** Fundo `#0a0a0a`, cockpit `#0d0d0d`, cards `#111111`, bordas `#262626` e acentos de energia em `#ef4444` / `#e11d1d`.
+- **Tipografia:** `Space Grotesk` (Interface & Títulos) e `JetBrains Mono` (Telemetria, HUD e Rótulos).
+- **Geometria Tática:** Cantos com `border-radius: 4px` e cantoneiras vermelhas nos 4 vértices dos painéis.
+- **Reator Atômico Quântico:** Animação a 60fps em HTML5 Canvas com órbitas elípticas, elétrons pulsantes e núcleo reativo.
 
-5. **Geração Automática de Dossiês Markdown**:
-   - Criação automática de arquivos `.md` bem estruturados salvos no diretório `./researches/`.
-   - Inclui tabela de metadados, resumo executivo e fontes.
-   - Gaveta de Dossiês no HUD para leitura com renderizador Markdown completo e botão para abrir diretamente no Windows Explorer.
-
-6. **Automação no Sistema Operacional Windows**:
-   - Abertura de aplicativos comuns (`calculadora`, `bloco de notas`, `vscode`, `explorador de arquivos`, `gerenciador de tarefas`).
-   - Abertura de links e sites no navegador padrão.
-   - Execução de comandos PowerShell com captura de saída `stdout` e `stderr`.
-   - Controle de segurança: **Modo Seguro** (bloqueia comandos de risco) vs. **Modo Autônomo** (executa diretamente com feedback no HUD).
+### 6. 📱 Suporte a PWA (Progressive Web App)
+- Manifesto configurado em [manifest.json](file:///c:/Users/Rubens/Desktop/projetinhos/jarvis%20gravity/frontend/manifest.json) com identidade e ícones vetoriais [atom-icon.svg](file:///c:/Users/Rubens/Desktop/projetinhos/jarvis%20gravity/frontend/icons/atom-icon.svg).
+- [sw.js](file:///c:/Users/Rubens/Desktop/projetinhos/jarvis%20gravity/frontend/sw.js) para cache da casca da aplicação e instalação como app autônomo no Windows, Android e iOS.
 
 ---
 
-## 📦 Inicialização Rápida
+## 🛠️ Stack Tecnológica
 
-### Método 1: Iniciar em 1 Clique (Recomendado)
-Dê um duplo-clique no arquivo:
-```bat
-run_jarvis.bat
-```
-O script verifica o Ollama, abre o navegador automaticamente em `http://localhost:8000` e inicia o servidor.
+| Camada | Tecnologia | Finalidade |
+| :--- | :--- | :--- |
+| **Backend Core** | Python 3.12, FastAPI, Uvicorn | Servidor assíncrono, SSE streaming e downloads |
+| **IA & Modelos** | Google GenAI SDK v2, Groq, Ollama | Google Gemini, Groq Vision, LLaMA local |
+| **Pesquisa** | `ddgs`, Jina Reader, arXiv XML API | Coleta de dados web e artigos científicos |
+| **Frontend UI** | HTML5 Semântico, Vanilla CSS Moderno | Cockpit HUD, tokens HSL/Hex, micro-animações |
+| **Canvas** | HTML5 2D Context | Reator atômico quântico reativo |
+| **Áudio & Voz** | Web Speech API, Web Audio API | Síntese TTS, transcrição STT e SFX táticos |
+| **Deploy** | Procfile, Render, Docker | Inicialização automática em nuvem |
 
-### Método 2: Iniciar via Terminal (Manual)
-```bash
-# 1. Instalar dependências (caso não tenham sido instaladas):
+---
+
+## 📦 Como Executar
+
+### Método 1: Iniciar em 1 Clique (Windows)
+Dê um duplo clique no inicializador:
+👉 **[run_atom.bat](file:///c:/Users/Rubens/Desktop/projetinhos/jarvis%20gravity/run_atom.bat)**
+
+O script verifica o motor Ollama, inicia o Uvicorn e abre automaticamente o Cockpit HUD em `http://localhost:8000`.
+
+### Método 2: Iniciar Manualmente via Terminal
+```powershell
+# 1. Instalar dependências
 pip install -r requirements.txt
 
-# 2. Iniciar o servidor FastAPI:
-python -m uvicorn backend.server:app --host 127.0.0.1 --port 8000
+# 2. Iniciar o servidor com auto-reload
+python -m uvicorn backend.server:app --host 127.0.0.1 --port 8000 --reload
 ```
-Em seguida, acesse no navegador: [http://localhost:8000](http://localhost:8000)
+Acesse no seu navegador: **`http://localhost:8000`**
+
+### Método 3: Deploy em Nuvem (Render)
+1. Conecte este repositório no [Render](https://render.com) como um **Web Service (Python 3)**.
+2. O arquivo [Procfile](file:///c:/Users/Rubens/Desktop/projetinhos/jarvis%20gravity/Procfile) já comanda o startup:
+   ```text
+   web: python -m uvicorn backend.server:app --host 0.0.0.0 --port $PORT
+   ```
+3. Defina a variável de ambiente `GEMINI_API_KEY` no painel do Render.
 
 ---
 
-## 🎯 Exemplos de Ordens para o JARVIS
+## 📚 Documentação Técnica Completa
 
-- 💬 **Conversa Geral**: *"Olá JARVIS, relate o status dos nossos sistemas."*
-- 🌐 **Pesquisa Web**: *"Pesquise as novidades recentes sobre inteligência artificial e robótica."*
-- 📝 **Criar Dossiê Markdown**: *"Crie um resumo em markdown sobre a arquitetura dos computadores quânticos."*
-- 🧮 **Abrir Aplicativo**: *"JARVIS, abra a calculadora."*
-- 📝 **Abrir Bloco de Notas**: *"Abra o bloco de notas para anotações."*
-- 📊 **Diagnóstico de Hardware**: *"Qual o uso atual de memória RAM e CPU do sistema?"*
-- 💻 **Comando Windows**: *"Execute o comando ipconfig no powershell."*
+Toda a documentação técnica detalhada, fluxos e governança estão centralizados no diretório [docs/](file:///c:/Users/Rubens/Desktop/projetinhos/jarvis%20gravity/docs):
+
+- 🗂️ **[docs/README.md](file:///c:/Users/Rubens/Desktop/projetinhos/jarvis%20gravity/docs/README.md)**: Índice geral navegável.
+- 🎯 **[docs/todo.md](file:///c:/Users/Rubens/Desktop/projetinhos/jarvis%20gravity/docs/todo.md)**: Backlog oficial e rastreabilidade de tarefas.
+- 🏛️ **[docs/arquitetura/atom-tactical-os.md](file:///c:/Users/Rubens/Desktop/projetinhos/jarvis%20gravity/docs/arquitetura/atom-tactical-os.md)**: Arquitetura completa e diagramas.
+- 👁️ **[docs/fluxos/visao-multimodal.md](file:///c:/Users/Rubens/Desktop/projetinhos/jarvis%20gravity/docs/fluxos/visao-multimodal.md)**: Fluxo de visão computacional de tela.
+- 🔬 **[docs/fluxos/pesquisa-e-sintese.md](file:///c:/Users/Rubens/Desktop/projetinhos/jarvis%20gravity/docs/fluxos/pesquisa-e-sintese.md)**: Busca web, Jina Reader e arXiv.
+- 📡 **[docs/api/endpoints.md](file:///c:/Users/Rubens/Desktop/projetinhos/jarvis%20gravity/docs/api/endpoints.md)**: Especificação de rotas REST e eventos SSE.
+- 🌐 **[docs/deploy/render-e-local.md](file:///c:/Users/Rubens/Desktop/projetinhos/jarvis%20gravity/docs/deploy/render-e-local.md)**: Guia completo de deploy e ambiente.
+- 🎨 **[docs/design-system/dark-tactical-red.md](file:///c:/Users/Rubens/Desktop/projetinhos/jarvis%20gravity/docs/design-system/dark-tactical-red.md)**: Design system Dark Tactical Red.
 
 ---
 
-## 📁 Estrutura de Arquivos
+## 🔒 Segurança & Privacidade
+- **Zero-Persistência de Chaves em Git:** Chaves de API ficam salvas no seu `.env` local ou apenas na memória da aba aberta (`sessionStorage`).
+- **Downloads Seguros:** Validação estrita de extensão e bloqueio de caracteres especiais ou sequências de diretórios maliciosas.
 
-```
-jarvis gravity/
-├── backend/
-│   ├── core/
-│   │   ├── jarvis.py          # Cérebro do agente e detecção de ferramentas
-│   │   └── ollama_client.py   # Integração e streaming com o Ollama SDK
-│   ├── tools/
-│   │   ├── search_tool.py     # Pesquisa web DuckDuckGo
-│   │   ├── markdown_tool.py   # Gestor de dossiês Markdown (.md)
-│   │   └── system_tool.py     # Automação do Windows (PowerShell/CMD)
-│   └── server.py              # API FastAPI & Servidor estático
-├── frontend/
-│   ├── index.html             # Cockpit HUD Stark Industries
-│   ├── css/
-│   │   └── style.css          # Design futurista, glassmorphism e neon
-│   └── js/
-│       ├── reactor.js         # Arc Reactor animado em Canvas
-│       ├── audio.js           # Reconhecimento, síntese vocal e SFX
-│       ├── api.js             # Streaming SSE e chamadas de API
-│       └── app.js             # Orquestrador do frontend
-├── researches/                # Diretório onde os arquivos Markdown são salvos
-├── requirements.txt           # Dependências Python
-├── run_jarvis.bat             # Launcher rápido para Windows
-└── README.md                  # Documentação do sistema
-```
+---
+
+## 👤 Autor
+**Rubens Mota**  
+*Arquiteto de Software & Engenheiro de Inteligência Artificial*
