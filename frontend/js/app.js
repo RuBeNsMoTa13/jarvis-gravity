@@ -14,6 +14,11 @@ class JarvisApp {
     this.isGenerating = false;
     this.pollTelemetryTimer = null;
 
+    // Estado da Visão de Tela Multimodal
+    this.screenStream = null;
+    this.screenVideo = null;
+    this.isScreenSharing = false;
+
     // Inicializar Reator Arc
     this.reactor = new ArcReactor('arc-reactor-canvas');
 
@@ -151,10 +156,25 @@ class JarvisApp {
     this.modalDossierTitle = document.getElementById('modal-dossier-title');
     this.modalDossierContent = document.getElementById('modal-dossier-content');
     this.modalOpenWinBtn = document.getElementById('modal-open-win-btn');
+    this.modalDownloadBtn = document.getElementById('modal-download-btn');
     this.closeModalBtn = document.getElementById('close-modal-btn');
+
+    // Visão de Tela Multimodal (A.T.O.M.)
+    this.screenShareBtn = document.getElementById('screen-share-btn');
+    this.screenBtnLabel = document.getElementById('screen-btn-label');
+    this.screenPreviewBadge = document.getElementById('screen-preview-badge');
+    this.stopScreenShareBtn = document.getElementById('stop-screen-share-btn');
   }
 
   setupEventListeners() {
+    // Visão de Tela Multimodal
+    if (this.screenShareBtn) {
+      this.screenShareBtn.addEventListener('click', () => this.toggleScreenShare());
+    }
+    if (this.stopScreenShareBtn) {
+      this.stopScreenShareBtn.addEventListener('click', () => this.stopScreenShare());
+    }
+
     // Envio de Mensagem
     this.sendBtn.addEventListener('click', () => this.handleUserSubmit());
     this.chatInput.addEventListener('keydown', (e) => {
@@ -246,15 +266,15 @@ class JarvisApp {
     this.clearChatBtn.addEventListener('click', () => {
       this.messages = [];
       this.chatMessages.innerHTML = `
-        <div class="chat-msg jarvis-msg">
-          <div class="msg-avatar">◈</div>
+        <div class="chat-msg atom-msg jarvis-msg">
+          <div class="msg-avatar">⚛</div>
           <div class="msg-body">
             <div class="msg-meta">
-              <span class="msg-sender">JARVIS</span>
+              <span class="msg-sender">A.T.O.M.</span>
               <span class="msg-time">AGORA</span>
               <button class="copy-msg-btn" title="Copiar mensagem">📋 Copiar</button>
             </div>
-            <div class="msg-content">Histórico limpo, senhor. Como posso ajudá-lo agora?</div>
+            <div class="msg-content">Histórico de operações limpo. Matriz A.T.O.M. aguardando novas diretrizes táticas, senhor Rubens.</div>
           </div>
         </div>
       `;
@@ -338,7 +358,7 @@ class JarvisApp {
     });
 
     this.testVoiceBtn.addEventListener('click', () => {
-      this.audio.speak("Sistemas vocais operacionais, senhor. JARVIS às suas ordens.");
+      this.audio.speak("Sistemas vocais operacionais, senhor Rubens. A.T.O.M. às suas ordens.");
     });
 
     if (this.testMicHardwareBtn) {
@@ -579,7 +599,7 @@ class JarvisApp {
       this.micBtn.classList.toggle('recording', isListening);
       const label = document.getElementById('mic-btn-label');
       if (label) {
-        label.innerText = isListening ? 'ESCUTANDO... [NUMLOCK P/ PARAR]' : 'FALAR COM JARVIS [NUMLOCK]';
+        label.innerText = isListening ? 'ESCUTANDO... [NUMLOCK P/ PARAR]' : 'FALAR COM A.T.O.M. [NUMLOCK]';
       }
     }
 
@@ -611,9 +631,131 @@ class JarvisApp {
     });
   }
 
+  /**
+   * Alterna compartilhamento de tela com o A.T.O.M. (Visão Multimodal)
+   */
+  async toggleScreenShare() {
+    if (this.isScreenSharing) {
+      this.stopScreenShare();
+    } else {
+      await this.startScreenShare();
+    }
+  }
+
+  async startScreenShare() {
+    try {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getDisplayMedia) {
+        alert("Seu navegador não suporta compartilhamento de tela via getDisplayMedia.");
+        return;
+      }
+
+      this.screenStream = await navigator.mediaDevices.getDisplayMedia({
+        video: {
+          cursor: "always",
+          frameRate: { ideal: 5, max: 15 }
+        },
+        audio: false
+      });
+
+      this.screenVideo = document.createElement('video');
+      this.screenVideo.autoplay = true;
+      this.screenVideo.playsInline = true;
+      this.screenVideo.muted = true;
+      this.screenVideo.srcObject = this.screenStream;
+      await this.screenVideo.play();
+
+      this.isScreenSharing = true;
+
+      // Atualizar UI
+      if (this.screenShareBtn) {
+        this.screenShareBtn.classList.add('active');
+        if (this.screenBtnLabel) this.screenBtnLabel.innerText = "TELA CONECTADA";
+      }
+      if (this.screenPreviewBadge) {
+        this.screenPreviewBadge.classList.remove('hidden');
+      }
+
+      // Detectar quando o usuário encerra o compartilhamento pela barra do SO/navegador
+      const track = this.screenStream.getVideoTracks()[0];
+      if (track) {
+        track.onended = () => {
+          this.stopScreenShare();
+        };
+      }
+
+      this.audio.playToolBeep();
+      this.logTerminal('[VISÃO DE TELA]: Transmissão iniciada. A.T.O.M. agora possui percepção multimodal.', 'sys');
+    } catch (err) {
+      console.warn("Compartilhamento de tela cancelado ou negado:", err);
+      this.stopScreenShare();
+    }
+  }
+
+  stopScreenShare() {
+    if (this.screenStream) {
+      try {
+        this.screenStream.getTracks().forEach(track => track.stop());
+      } catch (e) {}
+      this.screenStream = null;
+    }
+    if (this.screenVideo) {
+      try {
+        this.screenVideo.srcObject = null;
+      } catch (e) {}
+      this.screenVideo = null;
+    }
+    this.isScreenSharing = false;
+
+    if (this.screenShareBtn) {
+      this.screenShareBtn.classList.remove('active');
+      if (this.screenBtnLabel) this.screenBtnLabel.innerText = "ENXERGAR TELA";
+    }
+    if (this.screenPreviewBadge) {
+      this.screenPreviewBadge.classList.add('hidden');
+    }
+
+    this.logTerminal('[VISÃO DE TELA]: Transmissão de tela encerrada.', 'sys');
+  }
+
+  captureScreenFrame() {
+    if (!this.isScreenSharing || !this.screenVideo || this.screenVideo.videoWidth === 0) {
+      return null;
+    }
+
+    let width = this.screenVideo.videoWidth;
+    let height = this.screenVideo.videoHeight;
+    const maxDim = 1280;
+
+    if (width > maxDim || height > maxDim) {
+      if (width > height) {
+        height = Math.round((height * maxDim) / width);
+        width = maxDim;
+      } else {
+        width = Math.round((width * maxDim) / height);
+        height = maxDim;
+      }
+    }
+
+    const canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(this.screenVideo, 0, 0, width, height);
+
+    // JPEG 0.75 para otimização de banda e memória
+    return canvas.toDataURL('image/jpeg', 0.75);
+  }
+
   async bootSystem() {
     this.audio.playStartupSFX();
-    this.logTerminal('[SYSTEM] Inicializando subsistemas do protocolo JARVIS...', 'sys');
+    this.logTerminal('[SISTEMA] Matriz A.T.O.M. inicializada. Arquitetura híbrida pronta (Visão + Nuvem + SO).', 'sys');
+
+    // Registrar Service Worker para PWA se suportado
+    if ('serviceWorker' in navigator) {
+      try {
+        navigator.serviceWorker.register('sw.js').catch(() => {});
+      } catch (e) {}
+    }
 
     await this.loadModels();
     await this.updateTelemetry();
@@ -882,15 +1024,26 @@ class JarvisApp {
   }
 
   async loadResearches() {
-    const res = await JarvisAPI.getResearches();
-    if (!res.success) return;
+    let res = await JarvisAPI.getResearches();
+    if (res && res.success) {
+      try {
+        localStorage.setItem('atom_researches_cache', JSON.stringify(res));
+      } catch (e) {}
+    } else {
+      // Fallback para cache local se offline
+      const cached = localStorage.getItem('atom_researches_cache');
+      if (cached) {
+        try { res = JSON.parse(cached); } catch (e) {}
+      }
+    }
+    if (!res || !res.success) return;
 
     this.researchCountBadge.innerText = res.count;
     this.researchesList.innerHTML = '';
 
     if (res.items.length === 0) {
       this.researchesList.innerHTML = `
-        <div class="empty-dossier-state">Nenhum dossiê gerado ainda. Peça ao JARVIS: <em>"Crie um resumo em markdown sobre IA"</em></div>
+        <div class="empty-dossier-state">Nenhum dossiê gerado ainda. Peça ao A.T.O.M.: <em>"Crie um resumo em markdown sobre IA"</em></div>
       `;
       return;
     }
@@ -898,10 +1051,14 @@ class JarvisApp {
     res.items.forEach(item => {
       const card = document.createElement('div');
       card.className = 'dossier-card';
+      const downloadUrl = JarvisAPI.getDownloadUrl(item.filename);
       card.innerHTML = `
         <div class="dossier-head">
           <span class="dossier-title">📄 ${item.title}</span>
-          <span class="dossier-date">${item.modified}</span>
+          <div class="research-item-actions">
+            <span class="dossier-date">${item.modified}</span>
+            <a href="${downloadUrl}" download="${item.filename}" class="research-download-icon-btn" title="Baixar relatório (.md)" onclick="event.stopPropagation()">⬇</a>
+          </div>
         </div>
         <p class="dossier-preview">${item.preview || 'Sem pré-visualização'}</p>
       `;
@@ -921,6 +1078,19 @@ class JarvisApp {
       this.modalDossierContent.innerHTML = window.marked.parse(res.content);
     } else {
       this.modalDossierContent.innerText = res.content;
+    }
+
+    if (this.modalDownloadBtn) {
+      this.modalDownloadBtn.onclick = () => {
+        const url = JarvisAPI.getDownloadUrl(filename);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        this.logTerminal(`[DOWNLOAD]: Baixando ${filename}...`, 'sys');
+      };
     }
 
     this.modalOpenWinBtn.onclick = () => {
@@ -1025,15 +1195,24 @@ class JarvisApp {
     this.chatInput.value = '';
     this.chatInput.style.height = 'auto';
 
-    // 1. Renderizar mensagem do usuário
-    this.appendMessage('user', text);
+    // Capturar frame da tela se visão multimodal estiver ativa
+    let imageBase64 = null;
+    if (this.isScreenSharing) {
+      imageBase64 = this.captureScreenFrame();
+      if (imageBase64) {
+        this.logTerminal('[VISÃO DE TELA]: Capturado frame JPEG otimizado da interface (visão ativa).', 'cmd');
+      }
+    }
+
+    // 1. Renderizar mensagem do usuário (com indicador visual de tela se houver imagem)
+    this.appendMessage('user', text, !!imageBase64);
     this.messages.push({ role: 'user', content: text });
 
     this.isGenerating = true;
     this.reactor.setState('THINKING');
     this.audio.playToolBeep();
 
-    // 2. Criar card da resposta do JARVIS com streaming
+    // 2. Criar card da resposta do A.T.O.M. com streaming
     const assistantMsg = this.appendStreamingMessage();
     let fullResponse = '';
 
@@ -1056,6 +1235,7 @@ class JarvisApp {
       temperature: temperature,
       autonomous: autonomous,
       session_key: sessionKey,
+      image_base64: imageBase64,
       signal: this.currentAbortController.signal,
 
       onToken: (token) => {
@@ -1077,6 +1257,21 @@ class JarvisApp {
           const out = toolEvent.data.stdout || toolEvent.data.stderr || '(sem saída)';
           this.logTerminal(`[SAÍDA]: ${out.substring(0, 160)}`, 'out');
         }
+      },
+
+      onClientAction: (actionEvent) => {
+        if (actionEvent.action === 'open_url' && actionEvent.url) {
+          window.open(actionEvent.url, '_blank');
+          this.logTerminal(`[AÇÃO CLIENTE]: Aberto link no navegador: ${actionEvent.url}`, 'sys');
+        }
+      },
+
+      onReportCreated: (reportEvent) => {
+        const filename = reportEvent.filename;
+        const downloadUrl = JarvisAPI.getDownloadUrl(filename);
+        assistantMsg.appendReportCreatedCard(filename, downloadUrl);
+        this.loadResearches();
+        this.logTerminal(`[RELATÓRIO GERADO]: ${filename} (Download disponível)`, 'sys');
       },
 
       onFileCreated: (fileData) => {
@@ -1111,7 +1306,7 @@ class JarvisApp {
   }
 
   /**
-   * BOTÃO [-]: Interrompe completamente o JARVIS.
+   * BOTÃO [-]: Interrompe completamente o A.T.O.M.
    * Cancela geração em tempo real, fala vocal (TTS) e microfone imediatamente.
    */
   interruptJarvis() {
@@ -1139,7 +1334,7 @@ class JarvisApp {
 
     // 5. Feedback sonoro e no terminal
     this.audio.playCancelSFX();
-    this.logTerminal('[COMANDO -]: JARVIS interrompido pelo operador.', 'sys');
+    this.logTerminal('[COMANDO -]: A.T.O.M. interrompido pelo operador.', 'sys');
   }
 
   /**
@@ -1164,7 +1359,7 @@ class JarvisApp {
     }
 
     this.audio.playToolBeep();
-    this.logTerminal('[COMANDO +]: JARVIS interrompido. Escuta ativada: fale agora...', 'cmd');
+    this.logTerminal('[COMANDO +]: A.T.O.M. interrompido. Escuta ativada: fale agora...', 'cmd');
   }
 
   showToolBanner(name, detail) {
@@ -1217,13 +1412,19 @@ class JarvisApp {
     }, 2000);
   }
 
-  appendMessage(role, content) {
+  appendMessage(role, content, hasScreenFrame = false) {
     const msgEl = document.createElement('div');
-    msgEl.className = `chat-msg ${role === 'user' ? 'user-msg' : 'jarvis-msg'}`;
+    msgEl.className = `chat-msg ${role === 'user' ? 'user-msg' : 'atom-msg jarvis-msg'}`;
 
     const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    const avatar = role === 'user' ? 'U' : '◈';
-    const sender = role === 'user' ? 'OPERADOR' : 'JARVIS';
+    const avatar = role === 'user' ? 'U' : '⚛';
+    const sender = role === 'user' ? 'OPERADOR' : 'A.T.O.M.';
+
+    const screenBadgeHtml = hasScreenFrame ? `
+      <div class="tactical-label" style="margin-bottom: 6px; font-size: 10px; color: var(--accent-red); display: flex; align-items: center; gap: 4px;">
+        <span>👁️</span> FRAME DE TELA ANEXADO (MULTIMODAL)
+      </div>
+    ` : '';
 
     msgEl.innerHTML = `
       <div class="msg-avatar">${avatar}</div>
@@ -1233,6 +1434,7 @@ class JarvisApp {
           <span class="msg-time">${now}</span>
           <button class="copy-msg-btn" title="Copiar mensagem">📋 Copiar</button>
         </div>
+        ${screenBadgeHtml}
         <div class="msg-content">${this.renderMarkdown(content)}</div>
       </div>
     `;
@@ -1250,15 +1452,15 @@ class JarvisApp {
 
   appendStreamingMessage() {
     const msgEl = document.createElement('div');
-    msgEl.className = 'chat-msg jarvis-msg';
+    msgEl.className = 'chat-msg atom-msg jarvis-msg';
 
     const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
     msgEl.innerHTML = `
-      <div class="msg-avatar">◈</div>
+      <div class="msg-avatar">⚛</div>
       <div class="msg-body">
         <div class="msg-meta">
-          <span class="msg-sender">JARVIS</span>
+          <span class="msg-sender">A.T.O.M.</span>
           <span class="msg-time">${now}</span>
           <button class="copy-msg-btn" title="Copiar resposta">📋 Copiar</button>
         </div>
@@ -1297,14 +1499,39 @@ class JarvisApp {
         `;
         toolsContainer.appendChild(badge);
       },
+      appendReportCreatedCard: (filename, downloadUrl) => {
+        const card = document.createElement('div');
+        card.className = 'chat-report-card';
+        card.innerHTML = `
+          <div class="report-card-info">
+            <span class="report-card-tag">DOSSIÊ TÁTICO FINALIZADO</span>
+            <span class="report-card-title">📄 ${filename}</span>
+          </div>
+          <div class="report-card-actions">
+            <a href="${downloadUrl}" download="${filename}" class="chat-report-download-btn" title="Baixar relatório em Markdown">⬇ BAIXAR (.MD)</a>
+            <button class="hud-btn-subtle read-dossier-btn" style="padding: 5px 8px; font-size: 11px; cursor: pointer;">📖 LER</button>
+          </div>
+        `;
+        const readBtn = card.querySelector('.read-dossier-btn');
+        if (readBtn) {
+          readBtn.addEventListener('click', () => {
+            this.openDossierModal(filename);
+          });
+        }
+        toolsContainer.appendChild(card);
+      },
       appendFileCreatedCard: (fileData) => {
         const card = document.createElement('div');
         card.className = 'tool-execution-card dossier';
+        const downloadUrl = JarvisAPI.getDownloadUrl(fileData.filename);
         card.innerHTML = `
           <div class="tool-header-line">📄 DOSSIÊ SALVO EM MARKDOWN</div>
-          <div style="margin: 4px 0;"><strong>${fileData.title}</strong></div>
-          <div style="font-size: 10px; color: #94a3b8;">${fileData.filename} (${fileData.size} bytes)</div>
-          <button class="hud-btn-subtle" style="margin-top: 6px; padding: 4px 8px; font-size: 10px; cursor: pointer;">📂 Abrir no Windows</button>
+          <div style="margin: 4px 0;"><strong>${fileData.title || fileData.filename}</strong></div>
+          <div style="font-size: 10px; color: #a3a3a3;">${fileData.filename} (${fileData.size || 0} bytes)</div>
+          <div style="display: flex; gap: 8px; margin-top: 6px;">
+            <a href="${downloadUrl}" download="${fileData.filename}" class="chat-report-download-btn" style="font-size: 10px; padding: 3px 8px;">⬇ Baixar (.md)</a>
+            <button class="hud-btn-subtle" style="margin-top: 0; padding: 3px 8px; font-size: 10px; cursor: pointer;">📂 Abrir no Windows</button>
+          </div>
         `;
         const btn = card.querySelector('button');
         btn.addEventListener('click', () => {

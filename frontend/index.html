@@ -3,17 +3,22 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="JARVIS - Assistente Inteligente em Tempo Real com Ollama Local, Pesquisa Web e Automação de SO">
-  <title>J.A.R.V.I.S. // Stark Industries Tactical OS</title>
+  <meta name="description" content="A.T.O.M. - Artificial Tactical Operating Matrix por Rubens Mota. Sistema Tático Híbrido com Visão Multimodal e Pesquisa Aprofundada.">
+  <meta name="theme-color" content="#ef4444">
+  <title>A.T.O.M. // Artificial Tactical Operating Matrix</title>
   
-  <!-- Google Fonts: Orbitron (Sci-Fi Headings) & Inter (Clean UI) -->
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" type="image/svg+xml" href="icons/atom-icon.svg">
+  <link rel="apple-touch-icon" href="icons/atom-icon.svg">
+  
+  <!-- Google Fonts: Space Grotesk (Interface Tática) & JetBrains Mono (Telemetria & HUD) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Orbitron:wght@500;700;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
   
   <link rel="stylesheet" href="css/style.css">
 </head>
-<body class="stark-theme">
+<body class="atom-theme">
   <!-- Scanlines & Background HUD Grids -->
   <div class="hud-background-grid"></div>
   <div class="hud-scanlines"></div>
@@ -27,9 +32,9 @@
     <header class="hud-header">
       <div class="header-left">
         <div class="stark-logo">
-          <span class="logo-symbol">◈</span>
-          <span class="logo-title">J.A.R.V.I.S.</span>
-          <span class="logo-ver">MARK-VII // V4.2</span>
+          <span class="logo-symbol">⚛</span>
+          <span class="logo-title">A.T.O.M.</span>
+          <span class="logo-ver">TACTICAL MATRIX // V2.0</span>
         </div>
         <div class="status-indicator-badge" id="system-status-badge">
           <span class="pulse-dot"></span>
@@ -81,10 +86,10 @@
         </div>
 
         <div class="telemetry-grid">
-          <!-- CPU GAUGE (JARVIS PROCESS) -->
+          <!-- CPU GAUGE (A.T.O.M. PROCESS) -->
           <div class="telemetry-card">
             <div class="card-head">
-              <span>CPU (JARVIS)</span>
+              <span>CPU (A.T.O.M.)</span>
               <span id="cpu-val" class="metric-highlight">0.0%</span>
             </div>
             <div class="hud-progress-bar">
@@ -96,10 +101,10 @@
             </div>
           </div>
 
-          <!-- RAM GAUGE (JARVIS MEMORY) -->
+          <!-- RAM GAUGE (A.T.O.M. MEMORY) -->
           <div class="telemetry-card">
             <div class="card-head">
-              <span>RAM (JARVIS)</span>
+              <span>RAM (A.T.O.M.)</span>
               <span id="ram-val" class="metric-highlight">0 MB</span>
             </div>
             <div class="hud-progress-bar">
@@ -125,7 +130,7 @@
             </div>
           </div>
 
-          <!-- OLLAMA SERVICE STATUS -->
+          <!-- MOTOR STATUS -->
           <div class="telemetry-card status-card">
             <div class="card-head">
               <span>MOTOR LOCAL (OLLAMA)</span>
@@ -133,7 +138,7 @@
             </div>
             <div class="engine-meta">
               <span id="ollama-subinfo">RAM IA: Inativo</span>
-              <span id="engine-model-tag">Gemma / Local</span>
+              <span id="engine-model-tag">A.T.O.M. / Híbrido</span>
             </div>
           </div>
         </div>
@@ -147,8 +152,9 @@
           <div class="quick-btn-group">
             <button class="quick-cmd-btn" data-prompt="Abra a calculadora">🧮 Abrir Calculadora</button>
             <button class="quick-cmd-btn" data-prompt="Abra o bloco de notas">📝 Bloco de Notas</button>
-            <button class="quick-cmd-btn" data-prompt="Qual o status do sistema e uso de hardware?">📊 Diagnóstico Completo</button>
-            <button class="quick-cmd-btn" data-prompt="JARVIS, pesquise na web as novidades sobre tecnologia hoje e faça um resumo">🌐 Pesquisar Notícias</button>
+            <button class="quick-cmd-btn" data-prompt="A.T.O.M., qual o status do sistema e uso de hardware?">📊 Diagnóstico Tático</button>
+            <button class="quick-cmd-btn" data-prompt="A.T.O.M., pesquise artigos científicos no arXiv sobre quantum computing e faça um resumo">🔬 Pesquisar no arXiv</button>
+            <button class="quick-cmd-btn" data-prompt="A.T.O.M., pesquise na web as novidades sobre tecnologia hoje e faça um resumo">🌐 Pesquisar Notícias</button>
           </div>
         </div>
 
@@ -156,12 +162,12 @@
         <div class="terminal-preview-container">
           <div class="terminal-header">
             <span class="term-dot"></span>
-            <span>TERMINAL POWERSHELL</span>
+            <span>TERMINAL TÁTICO</span>
             <button id="clear-term-btn" class="term-action-btn">LIMPAR</button>
           </div>
           <div id="terminal-output" class="terminal-logs">
-            <div class="log-line sys">[SYSTEM] Protocolo JARVIS inicializado.</div>
-            <div class="log-line sys">[SYSTEM] Pronto para execução de comandos do SO.</div>
+            <div class="log-line sys">[SISTEMA] Matriz A.T.O.M. inicializada.</div>
+            <div class="log-line sys">[SISTEMA] Arquitetura híbrida pronta (Visão + Nuvem + SO).</div>
           </div>
         </div>
       </aside>
@@ -178,7 +184,7 @@
             <!-- CENTRAL CORE OVERLAY -->
             <div class="reactor-core-info">
               <span class="core-subtitle" id="core-state-subtitle">ONLINE</span>
-              <h2 class="core-title" id="core-state-title">JARVIS</h2>
+              <h2 class="core-title" id="core-state-title">A.T.O.M.</h2>
               <div class="audio-wave-visualizer" id="audio-waves">
                 <span class="wave-bar"></span>
                 <span class="wave-bar"></span>
@@ -190,16 +196,21 @@
           </div>
         </div>
 
-        <!-- VOICE & AUDIO INTERACTION CONTROLS -->
+        <!-- VOICE & MULTIMODAL CONTROLS -->
         <div class="voice-controls-bar">
-          <button id="quick-stop-btn" class="hud-action-pill pill-stop" title="Interromper JARVIS imediatamente (Atalho: - ou Esc)">
+          <button id="quick-stop-btn" class="hud-action-pill pill-stop" title="Interromper A.T.O.M. imediatamente (Atalho: - ou Esc)">
             <span class="pill-symbol">−</span>
             <span>PARAR [-]</span>
           </button>
 
-          <button id="mic-toggle-btn" class="voice-btn mic-btn" title="Parar o JARVIS e começar a ouvir você (Atalho: +)">
+          <button id="screen-share-btn" class="hud-control-toggle screen-btn" title="Compartilhar tela com o A.T.O.M. (Visão Multimodal)">
+            <span class="toggle-icon">👁️</span>
+            <span class="toggle-label" id="screen-btn-label">ENXERGAR TELA</span>
+          </button>
+
+          <button id="mic-toggle-btn" class="voice-btn mic-btn" title="Parar o A.T.O.M. e começar a ouvir você (Atalho: +)">
             <span class="mic-icon">🎙️</span>
-            <span class="mic-label" id="mic-btn-label">FALAR COM JARVIS [+]</span>
+            <span class="mic-label" id="mic-btn-label">FALAR COM A.T.O.M. [+]</span>
           </button>
 
           <button id="tts-toggle-btn" class="hud-control-toggle active" title="Alternar resposta por voz (Text-To-Speech)">
@@ -209,7 +220,7 @@
 
           <button id="sfx-toggle-btn" class="hud-control-toggle active" title="Alternar efeitos sonoros de interface">
             <span class="toggle-icon">⚡</span>
-            <span class="toggle-label">SFX SCI-FI</span>
+            <span class="toggle-label">SFX TÁTICO</span>
           </button>
         </div>
 
@@ -236,17 +247,18 @@
         <div class="chat-messages-container" id="chat-messages">
           
           <!-- WELCOME MESSAGE -->
-          <div class="chat-msg jarvis-msg">
-            <div class="msg-avatar">◈</div>
+          <div class="chat-msg atom-msg jarvis-msg">
+            <div class="msg-avatar">⚛</div>
             <div class="msg-body">
               <div class="msg-meta">
-                <span class="msg-sender">JARVIS</span>
+                <span class="msg-sender">A.T.O.M.</span>
                 <span class="msg-time">AGORA</span>
                 <button class="copy-msg-btn" title="Copiar mensagem">📋 Copiar</button>
               </div>
               <div class="msg-content">
-                Olá, senhor. Todos os subsistemas operacionais e a rede neural local via <strong>Ollama</strong> estão operando com 100% de capacidade. 
-                Estou pronto para realizar <strong>pesquisas na web</strong>, sintetizar <strong>dossiês em Markdown</strong> e <strong>executar comandos no Windows</strong> sob suas ordens. Como posso servi-lo hoje?
+                Matriz Tática A.T.O.M. inicializada e operacional sob o comando de Rubens Mota. 
+                Subsistemas neurais híbridos (Google Gemini / Groq Vision / Local), busca aprofundada com DuckDuckGo & arXiv, e visão de tela em tempo real ativos. 
+                Como posso assisti-lo nas operações agora?
               </div>
             </div>
           </div>
@@ -264,6 +276,16 @@
 
         <!-- CHAT INPUT COMPOSER -->
         <div class="chat-composer">
+          <!-- SCREEN VISION PREVIEW BADGE -->
+          <div id="screen-preview-badge" class="screen-preview-badge hidden">
+            <div class="screen-badge-info">
+              <span class="screen-live-dot"></span>
+              <span class="screen-preview-icon">👁️</span>
+              <span class="screen-preview-text">VISÃO DE TELA ATIVA // TRANSMITINDO FRAME MULTIMODAL</span>
+            </div>
+            <button id="stop-screen-share-btn" class="screen-preview-close" title="Encerrar compartilhamento de tela">✕ ENCERRAR</button>
+          </div>
+
           <div class="composer-toolbar">
             <label class="auto-mode-toggle" title="Modo Autônomo: executa comandos do sistema diretamente sem pedir confirmação">
               <input type="checkbox" id="autonomous-toggle">
@@ -273,10 +295,10 @@
 
             <!-- AÇÕES RÁPIDAS DE CONTROLE [-] E [+] -->
             <div class="composer-quick-actions">
-              <button id="stop-jarvis-btn" class="hud-mini-btn btn-stop" title="Interromper JARVIS imediatamente (Atalho: - ou Esc)">
+              <button id="stop-jarvis-btn" class="hud-mini-btn btn-stop" title="Interromper A.T.O.M. imediatamente (Atalho: - ou Esc)">
                 <span>−</span> PARAR
               </button>
-              <button id="listen-jarvis-btn" class="hud-mini-btn btn-listen" title="Parar o JARVIS e começar a ouvir você (Atalho: +)">
+              <button id="listen-jarvis-btn" class="hud-mini-btn btn-listen" title="Parar o A.T.O.M. e começar a ouvir você (Atalho: +)">
                 <span>+</span> OUVIR
               </button>
             </div>
@@ -289,7 +311,7 @@
               id="chat-input" 
               class="hud-textarea" 
               rows="1" 
-              placeholder="Digite sua mensagem para o JARVIS aqui..."
+              placeholder="Transmita suas ordens para o A.T.O.M. aqui..."
               autocomplete="off"
             ></textarea>
 
@@ -322,7 +344,7 @@
       
       <div class="drawer-content">
         <div class="researches-list" id="researches-list">
-          <div class="empty-dossier-state">Nenhum dossiê gerado ainda. Peça ao JARVIS: <em>"Crie um resumo em markdown sobre IA"</em></div>
+          <div class="empty-dossier-state">Nenhum dossiê gerado ainda. Peça ao A.T.O.M.: <em>"Crie um resumo em markdown sobre IA"</em></div>
         </div>
       </div>
     </div>
@@ -476,7 +498,7 @@
           <span class="settings-desc">Valores menores (0.1 - 0.3) são mais determinísticos e exatos; valores maiores (0.7 - 0.9) são mais criativos e analíticos.</span>
         </div>
 
-        <!-- SECTION: VOZ DO JARVIS -->
+        <!-- SECTION: VOZ DO A.T.O.M. -->
         <div class="settings-section">
           <h4>CONFIGURAÇÕES DE VOZ (TTS)</h4>
           <div class="form-group">
@@ -511,6 +533,7 @@
             <h3 id="modal-dossier-title">Título do Dossiê</h3>
           </div>
           <div class="modal-actions">
+            <button id="modal-download-btn" class="hud-action-btn modal-download-btn" title="Baixar relatório em Markdown">⬇ BAIXAR RELATÓRIO</button>
             <button id="modal-open-win-btn" class="hud-action-btn">ABRIR ARQUIVO</button>
             <button id="close-modal-btn" class="close-drawer-btn">✕</button>
           </div>

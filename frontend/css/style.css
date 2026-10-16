@@ -3,45 +3,64 @@
    ========================================================================== */
 
 :root {
-  /* Cores Principais */
-  --bg-space: #060913;
-  --bg-cockpit: #090e1c;
-  --bg-panel: rgba(12, 20, 38, 0.75);
-  --bg-card: rgba(16, 28, 54, 0.6);
-  --bg-input: rgba(8, 14, 28, 0.9);
+  /* ==========================================================================
+     A.T.O.M. DARK TACTICAL RED DESIGN SYSTEM - RUBENS MOTA SPECIFICATION
+     ========================================================================== */
 
-  /* Acentos de Energia */
-  --cyan-core: #00f3ff;
-  --cyan-glow: rgba(0, 243, 255, 0.35);
-  --cyan-dim: rgba(0, 243, 255, 0.12);
-  --cyan-border: rgba(0, 243, 255, 0.25);
+  /* Cores Principais - Dark Tactical */
+  --bg-space: #0a0a0a;
+  --bg-cockpit: #0d0d0d;
+  --bg-panel: rgba(17, 17, 17, 0.92);
+  --bg-card: #111111;
+  --bg-card-hover: #151515;
+  --bg-input: #151515;
 
-  --amber-gold: #ffaa00;
-  --amber-glow: rgba(255, 170, 0, 0.3);
-  --amber-dim: rgba(255, 170, 0, 0.12);
+  /* Bordas Táticas Oficiais */
+  --border-color: #262626;
+  --border-muted: #404040;
+  --red-border-subtle: #3b1515;
 
-  --green-online: #00ff9d;
-  --green-glow: rgba(0, 255, 157, 0.4);
+  /* Paleta Vermelha Tática */
+  --accent-red: #ef4444;
+  --accent-red-hover: #e11d1d;
+  --accent-glow: rgba(239, 68, 68, 0.35);
+  --red-bg-subtle: #1f0d0d;
+  --red-bg-dark: #140a0a;
 
-  --red-laser: #ff3366;
-  --red-glow: rgba(255, 51, 102, 0.4);
+  /* Aliases para compatibilidade total de componentes HUD */
+  --cyan-core: #ef4444;
+  --cyan-glow: rgba(239, 68, 68, 0.35);
+  --cyan-dim: #1f0d0d;
+  --cyan-border: #3b1515;
 
-  /* Tipografia & Texto */
-  --text-primary: #e6f1ff;
-  --text-secondary: #8da2c0;
-  --text-dim: #546a89;
-  --text-code: #a5f3fc;
+  --amber-gold: #f59e0b;
+  --amber-glow: rgba(245, 158, 11, 0.3);
+  --amber-dim: rgba(245, 158, 11, 0.12);
 
-  --font-hud: 'Orbitron', -apple-system, sans-serif;
-  --font-sans: 'Inter', -apple-system, sans-serif;
-  --font-mono: 'JetBrains Mono', monospace;
+  --green-online: #10b981;
+  --green-glow: rgba(16, 185, 129, 0.4);
 
-  /* Geometria & Efeitos */
+  --red-laser: #ef4444;
+  --red-glow: rgba(239, 68, 68, 0.4);
+
+  /* Tipografia Tática */
+  --text-primary: #f5f5f5;
+  --text-secondary: #d4d4d4;
+  --text-muted: #a3a3a3;
+  --text-dim: #8a8a8a;
+  --text-code: #fca5a5;
+
+  --font-display: 'Space Grotesk', -apple-system, sans-serif;
+  --font-hud: 'Space Grotesk', -apple-system, sans-serif;
+  --font-sans: 'Space Grotesk', -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+
+  /* Geometria Tática: 4px padronizado */
   --border-radius-sm: 4px;
-  --border-radius-md: 8px;
-  --border-radius-lg: 14px;
+  --border-radius-md: 4px;
+  --border-radius-lg: 4px;
   --panel-blur: blur(16px);
-  --glow-shadow: 0 0 20px var(--cyan-glow);
+  --glow-shadow: 0 0 16px var(--accent-glow);
 }
 
 /* Reset Global */
@@ -106,8 +125,8 @@ code,
   position: fixed;
   inset: 0;
   background-image: 
-    linear-gradient(to right, rgba(0, 243, 255, 0.03) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(0, 243, 255, 0.03) 1px, transparent 1px);
+    linear-gradient(to right, rgba(239, 68, 68, 0.04) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(239, 68, 68, 0.04) 1px, transparent 1px);
   background-size: 40px 40px;
   pointer-events: none;
   z-index: 0;
@@ -138,12 +157,12 @@ code,
 .glow-top-left {
   top: -150px;
   left: -150px;
-  background: radial-gradient(circle, rgba(0, 243, 255, 0.12), transparent 70%);
+  background: radial-gradient(circle, rgba(239, 68, 68, 0.14), transparent 70%);
 }
 .glow-bottom-right {
   bottom: -150px;
   right: -150px;
-  background: radial-gradient(circle, rgba(255, 170, 0, 0.08), transparent 70%);
+  background: radial-gradient(circle, rgba(225, 29, 29, 0.08), transparent 70%);
 }
 
 /* ==========================================================================
@@ -1334,10 +1353,10 @@ code,
   width: 500px;
   max-width: 90vw;
   height: calc(100vh - 64px);
-  background: rgba(10, 16, 32, 0.95);
+  background: rgba(13, 13, 13, 0.96);
   backdrop-filter: blur(20px);
-  border-left: 1px solid var(--cyan-border);
-  box-shadow: -8px 0 30px rgba(0, 0, 0, 0.6);
+  border-left: 1px solid var(--border-color);
+  box-shadow: -8px 0 30px rgba(0, 0, 0, 0.8);
   z-index: 100;
   display: flex;
   flex-direction: column;
@@ -1350,10 +1369,11 @@ code,
 .drawer-header {
   height: 56px;
   padding: 0 20px;
+  background: #111111;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  border-bottom: 1px solid rgba(0, 243, 255, 0.15);
+  border-bottom: 1px solid var(--border-color);
 }
 .drawer-title {
   display: flex;
@@ -1515,7 +1535,7 @@ code,
 .hud-modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(4, 7, 15, 0.85);
+  background: rgba(10, 10, 10, 0.88);
   backdrop-filter: blur(8px);
   z-index: 200;
   display: flex;
@@ -1528,9 +1548,9 @@ code,
   width: 800px;
   max-width: 90vw;
   max-height: 85vh;
-  background: #0b1224;
-  border: 1px solid var(--cyan-core);
-  box-shadow: 0 0 30px var(--cyan-glow);
+  background: #0d0d0d;
+  border: 1px solid var(--accent-red);
+  box-shadow: 0 0 30px var(--accent-glow);
   border-radius: var(--border-radius-lg);
   display: flex;
   flex-direction: column;
@@ -1539,8 +1559,8 @@ code,
 .modal-header {
   height: 56px;
   padding: 0 20px;
-  background: rgba(12, 20, 40, 0.9);
-  border-bottom: 1px solid rgba(0, 243, 255, 0.2);
+  background: #111111;
+  border-bottom: 1px solid var(--border-color);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -2566,4 +2586,262 @@ code,
     grid-row: 2;
     height: 100%;
   }
+}
+
+/* ==========================================================================
+   A.T.O.M. TACTICAL HUD EXTENSIONS & SCREEN VISION
+   Especificação Dark Tactical Red // Rubens Mota
+   ========================================================================== */
+
+/* CANTONEIRAS TÁTICAS NOS PAINÉIS PRINCIPAIS */
+.hud-sidebar,
+.hud-centerstage,
+.hud-chat-panel,
+.hud-modal-window {
+  position: relative;
+}
+
+.hud-sidebar::before,
+.hud-centerstage::before,
+.hud-chat-panel::before,
+.hud-drawer::before,
+.hud-modal-window::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 10px;
+  height: 10px;
+  border-top: 2px solid var(--accent-red);
+  border-left: 2px solid var(--accent-red);
+  pointer-events: none;
+  z-index: 4;
+}
+
+.hud-sidebar::after,
+.hud-centerstage::after,
+.hud-chat-panel::after,
+.hud-drawer::after,
+.hud-modal-window::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 10px;
+  height: 10px;
+  border-bottom: 2px solid var(--accent-red);
+  border-right: 2px solid var(--accent-red);
+  pointer-events: none;
+  z-index: 4;
+}
+
+/* RÓTULOS TÁTICOS TIPO "01 · APRESENTAÇÃO" */
+.tactical-label {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  color: var(--accent-red);
+  text-transform: uppercase;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* BOTÃO DE VISÃO DE TELA (#screen-share-btn) */
+.hud-control-toggle.screen-btn {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  color: var(--text-muted);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.hud-control-toggle.screen-btn:hover {
+  border-color: var(--accent-red);
+  color: var(--text-primary);
+  box-shadow: 0 0 10px rgba(239, 68, 68, 0.25);
+}
+
+.hud-control-toggle.screen-btn.active {
+  background: var(--red-bg-subtle) !important;
+  border-color: var(--accent-red) !important;
+  color: #fff !important;
+  box-shadow: 0 0 16px var(--accent-glow) !important;
+  animation: pulseTacticalRed 2s infinite ease-in-out;
+}
+
+@keyframes pulseTacticalRed {
+  0% { box-shadow: 0 0 8px rgba(239, 68, 68, 0.3); }
+  50% { box-shadow: 0 0 20px rgba(239, 68, 68, 0.6); }
+  100% { box-shadow: 0 0 8px rgba(239, 68, 68, 0.3); }
+}
+
+/* BADGE FLUTUANTE DE VISÃO DE TELA NO COMPOSER */
+.screen-preview-badge {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--red-bg-subtle);
+  border: 1px solid var(--accent-red);
+  border-radius: var(--border-radius-sm);
+  padding: 6px 12px;
+  margin-bottom: 8px;
+  animation: slideDownBadge 0.25s ease-out;
+}
+
+@keyframes slideDownBadge {
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.screen-badge-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.screen-live-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent-red);
+  box-shadow: 0 0 8px var(--accent-red);
+  animation: blink 1.2s infinite ease-in-out;
+}
+
+.screen-preview-icon {
+  font-size: 14px;
+}
+
+.screen-preview-text {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: var(--text-primary);
+  text-transform: uppercase;
+}
+
+.screen-preview-close {
+  background: transparent;
+  border: 1px solid var(--red-border-subtle);
+  color: var(--accent-red);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  padding: 3px 8px;
+  border-radius: 2px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.screen-preview-close:hover {
+  background: var(--accent-red);
+  color: #fff;
+  border-color: var(--accent-red);
+}
+
+/* BOTÕES DE DOWNLOAD DE DOSSIÊ E RELATÓRIO */
+.dossier-download-btn,
+.modal-download-btn,
+.chat-report-download-btn {
+  background: var(--red-bg-subtle);
+  border: 1px solid var(--accent-red);
+  color: #fff;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  padding: 5px 10px;
+  border-radius: var(--border-radius-sm);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.dossier-download-btn:hover,
+.modal-download-btn:hover,
+.chat-report-download-btn:hover {
+  background: var(--accent-red);
+  color: #fff;
+  box-shadow: 0 0 12px var(--accent-glow);
+  transform: translateY(-1px);
+}
+
+/* CARD DE RELATÓRIO CRIADO NO CHAT */
+.chat-report-card {
+  margin-top: 10px;
+  background: #140a0a;
+  border: 1px solid var(--red-border-subtle);
+  border-left: 3px solid var(--accent-red);
+  border-radius: var(--border-radius-sm);
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  animation: fadeIn 0.3s ease;
+}
+
+.report-card-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.report-card-tag {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--accent-red);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.report-card-title {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.report-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+/* ITEM DE DOSSIÊ COM BOTÃO DE DOWNLOAD NA LISTA */
+.research-item-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.research-download-icon-btn {
+  background: transparent;
+  border: 1px solid var(--border-color);
+  color: var(--text-muted);
+  font-size: 12px;
+  padding: 4px 8px;
+  border-radius: 2px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.research-download-icon-btn:hover {
+  border-color: var(--accent-red);
+  color: var(--accent-red);
+  background: var(--red-bg-subtle);
 }

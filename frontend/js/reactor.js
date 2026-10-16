@@ -1,6 +1,7 @@
 /**
- * ARC REACTOR CANVAS VISUALIZER - J.A.R.V.I.S. HUD
- * Renderiza em tempo real o núcleo de energia e reage aos estados operacionais.
+ * A.T.O.M. TACTICAL QUANTUM REACTOR - CANVAS VISUALIZER
+ * Renderiza em tempo real o núcleo de energia atômica com órbitas quânticas
+ * e reage visualmente aos estados operacionais e de áudio (Dark Tactical Red).
  */
 
 export class ArcReactor {
@@ -10,8 +11,9 @@ export class ArcReactor {
     this.ctx = this.canvas.getContext('2d');
     
     this.state = 'IDLE'; // 'IDLE', 'LISTENING', 'THINKING', 'SPEAKING'
-    this.angle1 = 0;
-    this.angle2 = 0;
+    this.orbitAngle1 = 0;
+    this.orbitAngle2 = 0;
+    this.orbitAngle3 = 0;
     this.pulse = 0;
     this.particles = [];
     this.audioLevel = 0; // 0.0 a 1.0
@@ -28,20 +30,20 @@ export class ArcReactor {
     const waveEl = document.getElementById('audio-waves');
 
     if (newState === 'IDLE') {
-      if (titleEl) titleEl.innerText = 'JARVIS';
+      if (titleEl) titleEl.innerText = 'A.T.O.M.';
       if (subEl) subEl.innerText = 'ONLINE';
-      if (waveEl) waveEl.style.opacity = '0.3';
+      if (waveEl) waveEl.style.opacity = '0.35';
     } else if (newState === 'LISTENING') {
       if (titleEl) titleEl.innerText = 'OUVINDO';
       if (subEl) subEl.innerText = 'MIC ATIVO';
       if (waveEl) waveEl.style.opacity = '1';
     } else if (newState === 'THINKING') {
       if (titleEl) titleEl.innerText = 'PROCESSANDO';
-      if (subEl) subEl.innerText = 'NEURAL LOCAL';
-      if (waveEl) waveEl.style.opacity = '0.8';
+      if (subEl) subEl.innerText = 'MATRIZ TÁTICA';
+      if (waveEl) waveEl.style.opacity = '0.85';
     } else if (newState === 'SPEAKING') {
-      if (titleEl) titleEl.innerText = 'FALANDO';
-      if (subEl) subEl.innerText = 'RESPOSTA DE ÁUDIO';
+      if (titleEl) titleEl.innerText = 'TRANSMITINDO';
+      if (subEl) subEl.innerText = 'SÍNTESE VOCAL';
       if (waveEl) waveEl.style.opacity = '1';
     }
   }
@@ -52,19 +54,20 @@ export class ArcReactor {
 
   initParticles() {
     this.particles = [];
-    for (let i = 0; i < 30; i++) {
+    for (let i = 0; i < 36; i++) {
       this.particles.push({
+        orbitIndex: i % 3,
         angle: Math.random() * Math.PI * 2,
-        radius: 40 + Math.random() * 80,
-        speed: 0.005 + Math.random() * 0.015,
-        size: 1 + Math.random() * 2,
-        alpha: 0.2 + Math.random() * 0.7
+        speed: 0.015 + Math.random() * 0.02,
+        size: 1.5 + Math.random() * 2,
+        alpha: 0.4 + Math.random() * 0.6
       });
     }
   }
 
   animate() {
     const { ctx, canvas } = this;
+    if (!canvas || !ctx) return;
     const w = canvas.width;
     const h = canvas.height;
     const cx = w / 2;
@@ -72,103 +75,147 @@ export class ArcReactor {
 
     ctx.clearRect(0, 0, w, h);
 
-    // Ajustar velocidade conforme estado
+    // Ajustar velocidade e paleta conforme estado
     let speedMult = 1;
-    let mainColor = '#00f3ff';
-    let glowColor = 'rgba(0, 243, 255, 0.4)';
+    let mainColor = '#ef4444';
+    let secondaryColor = '#e11d1d';
+    let glowColor = 'rgba(239, 68, 68, 0.45)';
 
     if (this.state === 'THINKING') {
-      speedMult = 3.5;
-      mainColor = '#ffaa00';
-      glowColor = 'rgba(255, 170, 0, 0.5)';
+      speedMult = 3.2;
+      mainColor = '#ff6b6b';
+      secondaryColor = '#ef4444';
+      glowColor = 'rgba(255, 107, 107, 0.6)';
     } else if (this.state === 'LISTENING') {
-      speedMult = 1.2;
-      mainColor = '#ff3366';
-      glowColor = 'rgba(255, 51, 102, 0.5)';
+      speedMult = 1.4;
+      mainColor = '#ffffff';
+      secondaryColor = '#ef4444';
+      glowColor = 'rgba(239, 68, 68, 0.7)';
     } else if (this.state === 'SPEAKING') {
-      speedMult = 1.8;
-      mainColor = '#00ff9d';
-      glowColor = 'rgba(0, 255, 157, 0.5)';
+      speedMult = 2.0;
+      mainColor = '#ef4444';
+      secondaryColor = '#b91c1c';
+      glowColor = 'rgba(239, 68, 68, 0.55)';
     }
 
-    this.angle1 += 0.01 * speedMult;
-    this.angle2 -= 0.015 * speedMult;
-    this.pulse += 0.03 * speedMult;
+    this.orbitAngle1 += 0.012 * speedMult;
+    this.orbitAngle2 += 0.018 * speedMult;
+    this.orbitAngle3 += 0.015 * speedMult;
+    this.pulse += 0.035 * speedMult;
 
-    const pulseScale = 1 + Math.sin(this.pulse) * 0.05 + this.audioLevel * 0.2;
+    const pulseScale = 1 + Math.sin(this.pulse) * 0.05 + this.audioLevel * 0.22;
 
-    // 1. ANEL EXTERNO GRADIENTE
     ctx.save();
     ctx.translate(cx, cy);
 
+    // 1. ANEL EXTERNO TÁTICO COM CANTONEIRAS
     ctx.beginPath();
-    ctx.arc(0, 0, 140 * pulseScale, 0, Math.PI * 2);
-    ctx.strokeStyle = glowColor;
+    ctx.arc(0, 0, 142 * pulseScale, 0, Math.PI * 2);
+    ctx.strokeStyle = 'rgba(239, 68, 68, 0.2)';
     ctx.lineWidth = 1.5;
     ctx.stroke();
 
-    // 2. SEGMENTOS GIRATÓRIOS EXTERNOS (ÂNGULO 1)
-    ctx.save();
-    ctx.rotate(this.angle1);
-    const segments = 12;
-    for (let i = 0; i < segments; i++) {
-      const startA = (i * (Math.PI * 2 / segments));
-      const endA = startA + (Math.PI * 2 / segments) * 0.55;
-      ctx.beginPath();
-      ctx.arc(0, 0, 125, startA, endA);
-      ctx.strokeStyle = mainColor;
-      ctx.lineWidth = 4;
-      ctx.shadowColor = mainColor;
-      ctx.shadowBlur = 10;
-      ctx.stroke();
-    }
-    ctx.restore();
-
-    // 3. ANEL INTERMEDIÁRIO COM MARCADORES TÁTICOS (ÂNGULO 2)
-    ctx.save();
-    ctx.rotate(this.angle2);
-    const ticks = 24;
-    for (let i = 0; i < ticks; i++) {
-      const a = i * (Math.PI * 2 / ticks);
-      const r1 = 95;
-      const r2 = (i % 4 === 0) ? 110 : 103;
+    // Marcadores Táticos a cada 90 graus
+    for (let i = 0; i < 4; i++) {
+      const a = (i * Math.PI) / 2;
+      const r1 = 136 * pulseScale;
+      const r2 = 148 * pulseScale;
       ctx.beginPath();
       ctx.moveTo(Math.cos(a) * r1, Math.sin(a) * r1);
       ctx.lineTo(Math.cos(a) * r2, Math.sin(a) * r2);
-      ctx.strokeStyle = (i % 4 === 0) ? mainColor : 'rgba(0, 243, 255, 0.3)';
-      ctx.lineWidth = (i % 4 === 0) ? 2.5 : 1;
+      ctx.strokeStyle = mainColor;
+      ctx.lineWidth = 2.5;
+      ctx.shadowColor = mainColor;
+      ctx.shadowBlur = 8;
+      ctx.stroke();
+    }
+
+    // 2. ÓRBITAS ELÍPTICAS ATÔMICAS (3 ÂNGULOS: 0°, 60°, 120°)
+    const rx = 126 * pulseScale;
+    const ry = 48 * pulseScale;
+    const orbitAngles = [0, Math.PI / 3, (2 * Math.PI) / 3];
+
+    orbitAngles.forEach((rotAngle, idx) => {
+      ctx.save();
+      ctx.rotate(rotAngle);
+
+      // Traçado da elipse
+      ctx.beginPath();
+      ctx.ellipse(0, 0, rx, ry, 0, 0, Math.PI * 2);
+      ctx.strokeStyle = idx === 0 ? mainColor : 'rgba(239, 68, 68, 0.4)';
+      ctx.lineWidth = idx === 0 ? 2 : 1.2;
+      ctx.shadowColor = glowColor;
+      ctx.shadowBlur = 10;
+      ctx.stroke();
+
+      // Elétron / quantum em trânsito
+      const curAngle = (idx === 0 ? this.orbitAngle1 : idx === 1 ? this.orbitAngle2 : this.orbitAngle3);
+      const ex = Math.cos(curAngle) * rx;
+      const ey = Math.sin(curAngle) * ry;
+
+      ctx.beginPath();
+      ctx.arc(ex, ey, 3.5, 0, Math.PI * 2);
+      ctx.fillStyle = '#ffffff';
+      ctx.shadowColor = mainColor;
+      ctx.shadowBlur = 12;
+      ctx.fill();
+
+      ctx.restore();
+    });
+
+    // 3. ANEL INTERNO COM MARCADORES DILATADOS
+    ctx.save();
+    ctx.rotate(-this.orbitAngle1 * 0.8);
+    const ticks = 24;
+    for (let i = 0; i < ticks; i++) {
+      const a = (i * Math.PI * 2) / ticks;
+      const r1 = 88;
+      const r2 = i % 6 === 0 ? 100 : 93;
+      ctx.beginPath();
+      ctx.moveTo(Math.cos(a) * r1, Math.sin(a) * r1);
+      ctx.lineTo(Math.cos(a) * r2, Math.sin(a) * r2);
+      ctx.strokeStyle = i % 6 === 0 ? mainColor : 'rgba(239, 68, 68, 0.25)';
+      ctx.lineWidth = i % 6 === 0 ? 2 : 1;
       ctx.stroke();
     }
     ctx.restore();
 
-    // 4. PARTÍCULAS EM ÓRBITA
-    this.particles.forEach(p => {
+    // 4. PARTÍCULAS EM VAPOR TÁTICO
+    this.particles.forEach((p) => {
       p.angle += p.speed * speedMult;
-      const px = Math.cos(p.angle) * p.radius;
-      const py = Math.sin(p.angle) * p.radius;
+      const rot = orbitAngles[p.orbitIndex];
+      const px = Math.cos(p.angle) * rx * 0.9;
+      const py = Math.sin(p.angle) * ry * 0.9;
+
+      ctx.save();
+      ctx.rotate(rot);
       ctx.beginPath();
       ctx.arc(px, py, p.size, 0, Math.PI * 2);
       ctx.fillStyle = mainColor;
       ctx.shadowColor = mainColor;
       ctx.shadowBlur = 6;
       ctx.fill();
+      ctx.restore();
     });
 
-    // 5. NÚCLEO CENTRAL RADIAL
-    const grad = ctx.createRadialGradient(0, 0, 10, 0, 0, 75 * pulseScale);
-    grad.addColorStop(0, '#ffffff');
-    grad.addColorStop(0.3, mainColor);
-    grad.addColorStop(0.8, 'rgba(0, 243, 255, 0.15)');
-    grad.addColorStop(1, 'transparent');
+    // 5. NÚCLEO DE FUSÃO CENTRAL (RADIAL GLOW)
+    const coreGrad = ctx.createRadialGradient(0, 0, 5, 0, 0, 68 * pulseScale);
+    coreGrad.addColorStop(0, '#ffffff');
+    coreGrad.addColorStop(0.25, mainColor);
+    coreGrad.addColorStop(0.65, secondaryColor);
+    coreGrad.addColorStop(0.9, 'rgba(31, 13, 13, 0.7)');
+    coreGrad.addColorStop(1, 'transparent');
 
     ctx.beginPath();
-    ctx.arc(0, 0, 75 * pulseScale, 0, Math.PI * 2);
-    ctx.fillStyle = grad;
+    ctx.arc(0, 0, 68 * pulseScale, 0, Math.PI * 2);
+    ctx.fillStyle = coreGrad;
+    ctx.shadowColor = mainColor;
+    ctx.shadowBlur = 18;
     ctx.fill();
 
     ctx.restore();
 
-    // Atualizar barras de onda de áudio na interface
+    // Atualizar barras de modulação de voz
     this.updateWaveBars();
 
     requestAnimationFrame(this.animate);

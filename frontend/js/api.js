@@ -170,7 +170,15 @@ export const JarvisAPI = {
   },
 
   /**
+   * Obtém a URL para download direto do arquivo Markdown (.md).
+   */
+  getDownloadUrl(filename) {
+    return `${API_BASE}/api/researches/${encodeURIComponent(filename)}/download`;
+  },
+
+  /**
    * Envia uma mensagem e consome a resposta com streaming SSE em tempo real.
+   * Suporta visão multimodal (image_base64) e eventos SSE ricos (client_action, report_created).
    */
   async chatStream({
     messages,
@@ -178,11 +186,14 @@ export const JarvisAPI = {
     temperature = 0.7,
     autonomous = false,
     session_key = null,
+    image_base64 = null,
     signal = null,
     onToken,
     onToolStart,
     onToolEnd,
     onFileCreated,
+    onReportCreated,
+    onClientAction,
     onDone,
     onError
   }) {
@@ -201,7 +212,8 @@ export const JarvisAPI = {
           model,
           temperature,
           autonomous,
-          session_key
+          session_key,
+          image_base64
         })
       });
 
@@ -243,6 +255,10 @@ export const JarvisAPI = {
                 onToolStart(event);
               } else if (event.type === 'tool_end' && onToolEnd) {
                 onToolEnd(event);
+              } else if (event.type === 'client_action' && onClientAction) {
+                onClientAction(event);
+              } else if (event.type === 'report_created' && onReportCreated) {
+                onReportCreated(event);
               } else if (event.type === 'file_created' && onFileCreated) {
                 onFileCreated(event.data);
               } else if (event.type === 'stream_end' && onDone) {
@@ -285,3 +301,6 @@ export const JarvisAPI = {
     }
   }
 };
+
+export const AtomAPI = JarvisAPI;
+
