@@ -19,7 +19,8 @@ Bem-vindo ao índice central de governança, arquitetura e rastreabilidade técn
 - 📐 **[Arquitetura Geral do Sistema (docs/arquitetura/atom-tactical-os.md)](file:///c:/Users/Rubens/Desktop/projetinhos/jarvis%20gravity/docs/arquitetura/atom-tactical-os.md)** — Diagrama mermaid, componentes híbridos e orquestração.
 - 📋 **[Plano Tático dos 9 Passos (plano.md)](file:///c:/Users/Rubens/Desktop/projetinhos/jarvis%20gravity/plano.md)** — Especificação e validação da migração completa.
 
-### 2. Fluxos Operacionais & Inteligência
+### 2. Modelos de IA & Inteligência Neural
+- 🧠 **[Catálogo de Modelos de IA & Arquitetura Híbrida (docs/modelos/catalogo-e-ia.md)](file:///c:/Users/Rubens/Desktop/projetinhos/jarvis%20gravity/docs/modelos/catalogo-e-ia.md)** — Modelos cloud oficiais (Gemini Flash, Groq Vision), modelos locais via Ollama, matriz comparativa e segurança de chaves.
 - 👁️ **[Visão Multimodal de Tela (docs/fluxos/visao-multimodal.md)](file:///c:/Users/Rubens/Desktop/projetinhos/jarvis%20gravity/docs/fluxos/visao-multimodal.md)** — Ciclo completo `getDisplayMedia`, canvas JPEG 1280px / 0.75, streaming base64 e injeção em Gemini e Groq Vision.
 - 🔬 **[Pesquisa Aprofundada & Síntese Científica (docs/fluxos/pesquisa-e-sintese.md)](file:///c:/Users/Rubens/Desktop/projetinhos/jarvis%20gravity/docs/fluxos/pesquisa-e-sintese.md)** — DuckDuckGo (`ddgs`), bypass Jina Reader (`r.jina.ai`), API XML do arXiv e geração de dossiês.
 

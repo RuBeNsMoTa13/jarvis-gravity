@@ -20,6 +20,7 @@ Este é o backlog oficial e único de rastreabilidade do projeto **A.T.O.M.** Qu
   - [x] Cadastrar `gemini-flash-latest` (Google Gemini padrão).
   - [x] Cadastrar `gemini-3.6-flash` (Google Gemini 3.6).
   - [x] Cadastrar `groq-llama-vision` (`meta-llama/llama-4-scout-17b-16e-instruct`).
+  - [x] Documentar catálogo neural e integração Ollama em `docs/modelos/catalogo-e-ia.md`.
 - [x] **Passo 3: Ferramenta de Pesquisa com DuckDuckGo & ArXiv & Jina (`search_tool.py`)**
   - [x] Implementar fallback resiliente via `ddgs` (DuckDuckGo).
   - [x] Implementar extração limpa de páginas via `r.jina.ai`.
