@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import List, Dict, Any, Optional
 from fastapi import FastAPI, HTTPException, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import StreamingResponse
+from fastapi.responses import StreamingResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 try:
@@ -16,16 +16,16 @@ except ImportError:
 from .core.ollama_client import ollama_manager
 from .core.api_client import api_model_manager
 from .core.jarvis import jarvis_brain
-from .tools.markdown_tool import list_researches, read_research, open_research_file
-from .tools.system_tool import get_system_telemetry, execute_os_command
+from .tools.markdown_tool import list_researches, read_research, open_research_file, get_research_file_path
+from .tools.system_tool import get_system_telemetry, execute_os_command, get_environment_info
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s")
-logger = logging.getLogger("jarvis.server")
+logger = logging.getLogger("atom.server")
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 FRONTEND_DIR = BASE_DIR / "frontend"
 
-app = FastAPI(title="JARVIS AI Assistant", version="1.0.0")
+app = FastAPI(title="A.T.O.M. Tactical OS", version="2.0.0")
 
 app.add_middleware(
     CORSMiddleware,
@@ -46,6 +46,7 @@ class ChatRequest(BaseModel):
     temperature: Optional[float] = 0.7
     autonomous: Optional[bool] = False
     session_key: Optional[str] = None
+    image_base64: Optional[str] = None
 
 class PullModelRequest(BaseModel):
     model_name: str
@@ -77,8 +78,9 @@ def health_check():
     ollama_ok = ollama_manager.is_available()
     return {
         "status": "online",
-        "system": "JARVIS Protocol",
-        "ollama_connected": ollama_ok
+        "system": "A.T.O.M. Tactical Operating Matrix",
+        "ollama_connected": ollama_ok,
+        "environment": get_environment_info()
     }
 
 @app.get("/api/models")
@@ -182,7 +184,7 @@ async def transcribe_audio(audio: UploadFile = File(...)):
 
 @app.post("/api/chat/stream")
 async def chat_stream(req: ChatRequest):
-    """Processa a conversa em tempo real com execução de ferramentas e streaming SSE."""
+    """Processa a conversa em tempo real com execução de ferramentas, visão de tela e streaming SSE."""
     messages_payload = [{"role": m.role, "content": m.content} for m in req.messages]
 
     async def sse_generator():
@@ -192,7 +194,8 @@ async def chat_stream(req: ChatRequest):
                 model=req.model,
                 temperature=req.temperature or 0.7,
                 autonomous=req.autonomous or False,
-                session_key=req.session_key
+                session_key=req.session_key,
+                image_base64=req.image_base64
             ):
                 yield f"data: {json.dumps(event, ensure_ascii=False)}\n\n"
         except Exception as e:
@@ -230,6 +233,19 @@ def get_research_content(filename: str):
     if not res:
         raise HTTPException(status_code=404, detail="Dossiê não encontrado")
     return res
+
+@app.get("/api/researches/{filename}/download")
+def download_research(filename: str):
+    """Permite o download direto do arquivo de pesquisa Markdown (.md)."""
+    file_path = get_research_file_path(filename)
+    if not file_path:
+        raise HTTPException(status_code=404, detail="Relatório não encontrado ou caminho inválido.")
+    return FileResponse(
+        path=str(file_path),
+        filename=file_path.name,
+        media_type="text/markdown",
+        headers={"Content-Disposition": f'attachment; filename="{file_path.name}"'}
+    )
 
 @app.post("/api/researches/open")
 def open_research(req: OpenResearchRequest):

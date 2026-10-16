@@ -32,7 +32,7 @@ load_dotenv_if_present()
 PROVIDER_DEFAULTS = {
     "google": {
         "env_var": "GEMINI_API_KEY",
-        "default_model": "gemini-2.5-flash",
+        "default_model": "gemini-flash-latest",
         "base_url": None
     },
     "openai": {
@@ -61,6 +61,25 @@ PROVIDER_DEFAULTS = {
         "base_url": "http://localhost:8080/v1"
     }
 }
+
+def _parse_image_base64(image_data: Optional[str]) -> Optional[tuple[str, str]]:
+    """
+    Extrai (raw_base64, mime_type) de strings de imagem recebidas da UI.
+    Suporta tanto Data URLs ('data:image/jpeg;base64,...') quanto strings base64 puras.
+    """
+    if not image_data or not isinstance(image_data, str) or not image_data.strip():
+        return None
+    data = image_data.strip()
+    mime_type = "image/jpeg"
+    if data.startswith("data:") and ";base64," in data:
+        header, b64_part = data.split(";base64,", 1)
+        mime_type = header.replace("data:", "").strip() or "image/jpeg"
+        raw_b64 = b64_part.strip()
+    else:
+        raw_b64 = data
+    if not raw_b64:
+        return None
+    return raw_b64, mime_type
 
 class ApiModelManager:
     def __init__(self):
@@ -336,23 +355,30 @@ class ApiModelManager:
 
                 if use_sdk:
                     client = genai.Client(api_key=key)
-                    response = client.models.generate_content(
-                        model=model_id or "gemini-2.5-flash",
-                        contents="Responda apenas: OK"
-                    )
+                    target_model = model_id or "gemini-flash-latest"
+                    try:
+                        response = client.models.generate_content(
+                            model=target_model,
+                            contents="Responda apenas: OK"
+                        )
+                    except Exception:
+                        response = client.models.generate_content(
+                            model="gemini-flash-latest",
+                            contents="Responda apenas: OK"
+                        )
                     text = response.text or "OK"
                     return {"success": True, "message": f"Conexão com Google Gemini bem-sucedida! Resposta: {text.strip()}"}
                 else:
-                    # REST nativo via urllib (não precisa de nenhum pacote pip instalado)
+                    # REST nativo via urllib (sem dependências externas)
                     import urllib.request
                     import urllib.error
                     import json
-                    real_model = model_id or "gemini-2.5-flash"
+                    real_model = model_id or "gemini-flash-latest"
                     payload = json.dumps({"contents": [{"parts": [{"text": "Responda apenas: OK"}]}]}).encode("utf-8")
 
                     def try_gemini_test(m_name):
                         url = f"https://generativelanguage.googleapis.com/v1beta/models/{m_name}:generateContent?key={key}"
-                        req = urllib.request.Request(url, data=payload, headers={"Content-Type": "application/json", "User-Agent": "JARVIS-OS/1.0"})
+                        req = urllib.request.Request(url, data=payload, headers={"Content-Type": "application/json", "User-Agent": "ATOM-OS/2.0"})
                         with urllib.request.urlopen(req, timeout=15) as resp:
                             data = json.loads(resp.read().decode("utf-8"))
                             return data["candidates"][0]["content"]["parts"][0]["text"]
@@ -361,9 +387,9 @@ class ApiModelManager:
                         ans = try_gemini_test(real_model)
                         return {"success": True, "message": f"Conexão com Google Gemini (REST) bem-sucedida! Resposta: {ans.strip()}"}
                     except urllib.error.HTTPError as he:
-                        if he.code == 404 and real_model != "gemini-2.5-flash":
-                            ans = try_gemini_test("gemini-2.5-flash")
-                            return {"success": True, "message": f"Conexão com Google Gemini (gemini-2.5-flash) bem-sucedida! Resposta: {ans.strip()}"}
+                        if he.code == 404 and real_model != "gemini-flash-latest":
+                            ans = try_gemini_test("gemini-flash-latest")
+                            return {"success": True, "message": f"Conexão com Google Gemini (gemini-flash-latest) bem-sucedida! Resposta: {ans.strip()}"}
                         raise
             else:
                 from openai import AsyncOpenAI
@@ -385,14 +411,18 @@ class ApiModelManager:
         self,
         model_cfg: Dict[str, Any],
         messages: List[Dict[str, str]],
+        image_base64: Optional[str] = None,
         session_key: Optional[str] = None,
         temperature: float = 0.7,
         system_prompt: Optional[str] = None
     ) -> AsyncGenerator[str, None]:
         """
         Executa streaming token-por-token de provedores de API externos.
+        Suporta visão multimodal injetando frame JPEG (base64) no Google Gemini e Groq/OpenAI.
         Possui fallback automático para REST nativo (urllib) caso google-genai não esteja instalado.
         """
+        import base64
+
         api_key = self.resolve_api_key(model_cfg, session_key)
         if not api_key:
             env_var = model_cfg.get("env_var", "sua chave de API")
@@ -400,36 +430,67 @@ class ApiModelManager:
             return
 
         provider = model_cfg.get("provider", "openai").lower()
-        model_id = model_cfg.get("model_id")
+        model_id = model_cfg.get("model_id") or "gemini-flash-latest"
+        parsed_image = _parse_image_base64(image_base64)
 
         try:
             if provider == "google":
                 use_sdk = False
                 try:
                     from google import genai
+                    from google.genai import types
                     use_sdk = True
                 except (ImportError, ModuleNotFoundError):
                     use_sdk = False
 
                 if use_sdk:
                     client = genai.Client(api_key=api_key)
-                    prompt_parts = []
-                    if system_prompt:
-                        prompt_parts.append(f"INSTRUÇÃO DO SISTEMA:\n{system_prompt}\n\n")
-                    
-                    for m in messages:
-                        role_label = "USUÁRIO" if m["role"] == "user" else "ASSISTENTE"
-                        prompt_parts.append(f"{role_label}: {m['content']}")
-                    
-                    full_contents = "\n\n".join(prompt_parts)
+                    contents_list: List[Any] = []
 
-                    response_stream = client.models.generate_content_stream(
-                        model=model_id,
-                        contents=full_contents,
+                    for idx, m in enumerate(messages):
+                        role = "user" if m.get("role") == "user" else "model"
+                        parts: List[Any] = [types.Part.from_text(text=m.get("content", ""))]
+
+                        # Injetar frame da tela na última mensagem do operador
+                        if idx == len(messages) - 1 and role == "user" and parsed_image:
+                            raw_b64, mime_t = parsed_image
+                            try:
+                                img_bytes = base64.b64decode(raw_b64)
+                                parts.append(types.Part.from_bytes(data=img_bytes, mime_type=mime_t))
+                            except Exception as b64_err:
+                                logger.warning(f"Falha ao decodificar base64 da imagem: {b64_err}")
+
+                        contents_list.append(types.Content(role=role, parts=parts))
+
+                    config = types.GenerateContentConfig(
+                        temperature=temperature,
+                        system_instruction=system_prompt if system_prompt else None
                     )
-                    for chunk in response_stream:
-                        if chunk.text:
-                            yield chunk.text
+
+                    try:
+                        response_stream = client.models.generate_content_stream(
+                            model=model_id,
+                            contents=contents_list,
+                            config=config
+                        )
+                        for chunk in response_stream:
+                            if chunk.text:
+                                yield chunk.text
+                    except Exception as sdk_call_err:
+                        # Fallback se o modelo selecionado for inexistente/descontinuado
+                        if model_id != "gemini-flash-latest":
+                            fallback_model = "gemini-flash-latest"
+                            yield f"*(Modelo '{model_id}' indisponível. Alternando para {fallback_model}...)*\n\n"
+                            fb_stream = client.models.generate_content_stream(
+                                model=fallback_model,
+                                contents=contents_list,
+                                config=config
+                            )
+                            for chunk in fb_stream:
+                                if chunk.text:
+                                    yield chunk.text
+                        else:
+                            raise sdk_call_err
                 else:
                     # Streaming nativo via API REST Google Gemini com SSE
                     import urllib.request
@@ -437,11 +498,23 @@ class ApiModelManager:
                     import json
 
                     contents_payload = []
-                    for m in messages:
+                    for idx, m in enumerate(messages):
                         role = "user" if m.get("role") == "user" else "model"
+                        parts = [{"text": m.get("content", "")}]
+
+                        # Injetar frame de visão no payload REST
+                        if idx == len(messages) - 1 and role == "user" and parsed_image:
+                            raw_b64, mime_t = parsed_image
+                            parts.append({
+                                "inline_data": {
+                                    "mime_type": mime_t,
+                                    "data": raw_b64
+                                }
+                            })
+
                         contents_payload.append({
                             "role": role,
-                            "parts": [{"text": m.get("content", "")}]
+                            "parts": parts
                         })
 
                     body_dict = {
@@ -461,7 +534,7 @@ class ApiModelManager:
                         return urllib.request.Request(
                             stream_url,
                             data=req_bytes,
-                            headers={"Content-Type": "application/json", "User-Agent": "JARVIS-OS/1.0"}
+                            headers={"Content-Type": "application/json", "User-Agent": "ATOM-OS/2.0"}
                         )
 
                     req = build_request(model_id)
@@ -477,8 +550,8 @@ class ApiModelManager:
                                         chunk_obj = json.loads(json_str)
                                         candidates = chunk_obj.get("candidates", [])
                                         if candidates:
-                                            parts = candidates[0].get("content", {}).get("parts", [])
-                                            for p in parts:
+                                            p_list = candidates[0].get("content", {}).get("parts", [])
+                                            for p in p_list:
                                                 t = p.get("text")
                                                 if t:
                                                     yield t
@@ -487,8 +560,8 @@ class ApiModelManager:
                     except urllib.error.HTTPError as http_err:
                         err_body = http_err.read().decode("utf-8", errors="ignore")
                         logger.error(f"Erro HTTP Gemini ({http_err.code}): {err_body}")
-                        if http_err.code == 404 and model_id != "gemini-2.5-flash":
-                            fallback_model = "gemini-2.5-flash"
+                        if http_err.code == 404 and model_id != "gemini-flash-latest":
+                            fallback_model = "gemini-flash-latest"
                             yield f"*(Modelo '{model_id}' não disponível. Alternando automaticamente para {fallback_model}...)*\n\n"
                             fb_req = build_request(fallback_model)
                             with urllib.request.urlopen(fb_req, timeout=60) as fb_resp:
@@ -501,8 +574,8 @@ class ApiModelManager:
                                                 chunk_obj = json.loads(fb_json)
                                                 candidates = chunk_obj.get("candidates", [])
                                                 if candidates:
-                                                    parts = candidates[0].get("content", {}).get("parts", [])
-                                                    for p in parts:
+                                                    p_list = candidates[0].get("content", {}).get("parts", [])
+                                                    for p in p_list:
                                                         t = p.get("text")
                                                         if t:
                                                             yield t
@@ -512,15 +585,36 @@ class ApiModelManager:
                             yield f"\n[Erro na API Google Gemini ({http_err.code})]: {err_body}"
 
             else:
-                # Provedores compatíveis com OpenAI (OpenAI, Groq, OpenRouter, DeepSeek, Custom)
+                # Provedores compatíveis com OpenAI (Groq Vision, OpenAI, OpenRouter, DeepSeek)
                 from openai import AsyncOpenAI
                 url = model_cfg.get("base_url") or PROVIDER_DEFAULTS.get(provider, {}).get("base_url")
                 client = AsyncOpenAI(api_key=api_key, base_url=url)
 
-                formatted_messages = []
+                formatted_messages: List[Dict[str, Any]] = []
                 if system_prompt:
                     formatted_messages.append({"role": "system", "content": system_prompt})
-                formatted_messages.extend(messages)
+
+                for idx, m in enumerate(messages):
+                    is_last = (idx == len(messages) - 1)
+                    if is_last and m.get("role") == "user" and parsed_image:
+                        raw_b64, mime_t = parsed_image
+                        formatted_messages.append({
+                            "role": m.get("role", "user"),
+                            "content": [
+                                {"type": "text", "text": m.get("content", "")},
+                                {
+                                    "type": "image_url",
+                                    "image_url": {
+                                        "url": f"data:{mime_t};base64,{raw_b64}"
+                                    }
+                                }
+                            ]
+                        })
+                    else:
+                        formatted_messages.append({
+                            "role": m.get("role", "user"),
+                            "content": m.get("content", "")
+                        })
 
                 response = await client.chat.completions.create(
                     model=model_id,

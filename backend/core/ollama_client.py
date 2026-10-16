@@ -2,25 +2,33 @@ import logging
 from typing import List, Dict, Any, AsyncGenerator, Optional
 import ollama
 
-logger = logging.getLogger("jarvis.core.ollama")
+import urllib.request
+
+logger = logging.getLogger("atom.core.ollama")
 
 class OllamaManager:
     def __init__(self, host: str = "http://localhost:11434"):
         self.host = host
-        self.client = ollama.Client(host=host)
-        self.async_client = ollama.AsyncClient(host=host)
-
-    def is_available(self) -> bool:
-        """Verifica se o servidor Ollama está respondendo."""
         try:
-            self.client.list()
-            return True
-        except Exception as e:
-            logger.warning(f"Ollama offline ou inacessível: {e}")
+            self.client = ollama.Client(host=host, timeout=2.0)
+            self.async_client = ollama.AsyncClient(host=host, timeout=2.0)
+        except Exception:
+            self.client = ollama.Client(host=host)
+            self.async_client = ollama.AsyncClient(host=host)
+
+    def is_available(self, timeout: float = 0.8) -> bool:
+        """Verifica de forma ultra-rápida se o servidor Ollama está respondendo."""
+        try:
+            req = urllib.request.Request(f"{self.host}/api/tags")
+            with urllib.request.urlopen(req, timeout=timeout) as resp:
+                return resp.status == 200
+        except Exception:
             return False
 
     def list_models(self) -> List[Dict[str, Any]]:
-        """Lista todos os modelos locais instalados no Ollama."""
+        """Lista todos os modelos locais instalados no Ollama (retorno imediato se offline)."""
+        if not self.is_available():
+            return []
         try:
             response = self.client.list()
             raw_models = response.get("models", [])
@@ -42,7 +50,7 @@ class OllamaManager:
                 })
             return models_list
         except Exception as e:
-            logger.error(f"Erro ao listar modelos do Ollama: {e}")
+            logger.warning(f"Erro ao listar modelos do Ollama: {e}")
             return []
 
     async def pull_model_stream(self, model_name: str) -> AsyncGenerator[Dict[str, Any], None]:
